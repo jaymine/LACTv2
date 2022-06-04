@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 14)
 find_package(OpenSSL REQUIRED)
 
 
-# check if boost was found
+# check if OPENSSL was found
 if(OpenSSL_FOUND)
     message ("LOG: OpenSSL found")
 else()
@@ -17,7 +17,7 @@ endif()
 # find sqlite3 install with the libraries filesystem and system
 find_package(SQLite3 REQUIRED)
 
-# check if boost was found
+# check if SQLITE3 was found
 if(SQLite3_FOUND)
     message ("LOG: SQLite3 found")
 else()

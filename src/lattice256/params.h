@@ -24,21 +24,21 @@
 #ifndef LACTXV2_PARAMS_H
 #define LACTXV2_PARAMS_H
 
-#define N       256
-#define n       6
-#define m       4
-#define L       64
+#define LACTX_N       256
+#define LACTX_n       6
+#define LACTX_m       4
+#define LACTX_L       64
 #define D       3
 
-#define Q       17592186028033  // 2^44 - 2^14 + 1
+#define LACTX_Q       17592186028033  // 2^44 - 2^14 + 1
 #define Q2      8796093014016  // (2^44 - 2^14)/2
 #define K1      44
 #define K11     43
 #define KMONT   46
 #define K2      14
 #define ROOT    25128005879
-#define MONT    65532 // 2^46 \in [Q, 0]
-#define QINV    57174873096193 // inverse_mod(Q, R)
+#define MONT    65532 // 2^46 \in [LACTX_Q, 0]
+#define QINV    57174873096193 // inverse_mod(LACTX_Q, R)
 #define FILTER  70368744177663
 #define F1      16492691176449
 #define F2      274877906944
@@ -61,15 +61,15 @@
 #define TAU2_BITS    32
 #define TAU3_BITS    16
 
-#define u_BYTES       ((K1 * N)/8)
-#define z_BYTES       (L*((ALPHA_BITS + 1) * N)/8)
-#define R_BYTES       ((m - D) * ((TAU2_BITS + 1) * N)/8)
+#define u_BYTES       ((K1 * LACTX_N)/8)
+#define z_BYTES       (LACTX_L*((ALPHA_BITS + 1) * LACTX_N)/8)
+#define R_BYTES       ((LACTX_m - D) * ((TAU2_BITS + 1) * LACTX_N)/8)
 
-#define r_BYTES       ((N)/8 * (TAU_BITS + 1))
-#define r1_BYTES      ((N)/8 * (TAU1_BITS + 1))
-#define r2_BYTES      ((N)/8 * (TAU2_BITS + 1))
-#define r3_BYTES      ((N)/8 * (TAU3_BITS + 1))
-#define a_BYTES       ((N)/8 * (ALPHA_BITS + 1))
+#define r_BYTES       ((LACTX_N)/8 * (TAU_BITS + 1))
+#define r1_BYTES      ((LACTX_N)/8 * (TAU1_BITS + 1))
+#define r2_BYTES      ((LACTX_N)/8 * (TAU2_BITS + 1))
+#define r3_BYTES      ((LACTX_N)/8 * (TAU3_BITS + 1))
+#define a_BYTES       ((LACTX_N)/8 * (ALPHA_BITS + 1))
 
 #define BETA           60  // number of +1 or -1 in the challenge polynomial
 #define SEED_BYTES     48
@@ -84,14 +84,14 @@
 
 #define CHI            64
 
-#define u_HIGHBITS        ((((K11 - u_ERROR + 1) * N)/8) * n)
-#define t1_HIGHBITS       ((((K11 - t1_ERROR + 1) * N)/8) * n)
-#define t2_HIGHBITS       ((((K11 - t2_ERROR + 1) * N)/8) * n)
-#define pk_HIGHBITS       ((((K11 - pk_ERROR + 1) * N)/8) * n)
-#define y_HIGHBITS       ((((K11 - y_ERROR + 1) * N)/8) * n)
+#define u_HIGHBITS        ((((K11 - u_ERROR + 1) * LACTX_N)/8) * LACTX_n)
+#define t1_HIGHBITS       ((((K11 - t1_ERROR + 1) * LACTX_N)/8) * LACTX_n)
+#define t2_HIGHBITS       ((((K11 - t2_ERROR + 1) * LACTX_N)/8) * LACTX_n)
+#define pk_HIGHBITS       ((((K11 - pk_ERROR + 1) * LACTX_N)/8) * LACTX_n)
+#define y_HIGHBITS       ((((K11 - y_ERROR + 1) * LACTX_N)/8) * LACTX_n)
 
 #define HINTBITS       2
-#define HINTBYTES      ((((HINTBITS) * N)/8) * n)
+#define HINTBYTES      ((((HINTBITS) * LACTX_N)/8) * LACTX_n)
 
 #define MAX_ADDITIONS  15
 #define MAX_ADDITIONS_BITS  3
@@ -102,7 +102,7 @@
 // zeta_1 = (2^23 * root^(129)) mod q => 129 = bit_rev(1) index()
 // zeta_2 = (2^23 * root^(65)) mod q => 65 = bit_rev(2)
 // 17592186044415 (index(0))
-static const int64_t zetas[N] = {
+static const int64_t zetas[LACTX_N] = {
         65532,    18605629968, -8503167997088,  1353408248862,
         6532059901091,  6270874789595,  7743964505125, -8683495166601,
         -7075184553544,  6467114370538,  6918871833738, -5791507952972,

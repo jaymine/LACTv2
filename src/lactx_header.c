@@ -87,8 +87,8 @@ int lactx_header_init(
         unsigned int out_len,
         unsigned int int_len
 ) {
-    header->z0 = (poly *) malloc(L * get_carry_range(int_len) * sizeof(poly));
-    header->z1 = (poly *) malloc(L * get_carry_range(out_len) * sizeof(poly));
+    header->z0 = (poly *) malloc(LACTX_L * get_carry_range(int_len) * sizeof(poly));
+    header->z1 = (poly *) malloc(LACTX_L * get_carry_range(out_len) * sizeof(poly));
     return 1;
 }
 
@@ -106,10 +106,10 @@ int lactx_header_free(header_t *header) {
  */
 void set_carries(poly *c, const uint64_t *v, unsigned int len) {
     unsigned int i, j;
-    poly_set_zero(c, 0, N);
+    poly_set_zero(c, 0, LACTX_N);
     int64_t tmp;
     c->coef[0] = 0;
-    for (j = 0; j < L; j++) {
+    for (j = 0; j < LACTX_L; j++) {
         tmp = 0;
         for (i = 0; i < len; i++) {
             tmp += ((int64_t) (v[i] >> j) & (int64_t) 1);
@@ -119,16 +119,16 @@ void set_carries(poly *c, const uint64_t *v, unsigned int len) {
 }
 
 /**
- * Set c_hat = sum_{i=0}^{L-1} sum_0^{carry_range}(d_i^l * rot(2c_i^l - 1, j)) such that c_i = sum(2^lc_i^l)
+ * Set c_hat = sum_{i=0}^{LACTX_L-1} sum_0^{carry_range}(d_i^l * rot(2c_i^l - 1, j)) such that c_i = sum(2^lc_i^l)
  * @param c_hat - output polynomial (not in NTT domain)
  * @param c - header polynomial (not in NTT domain)
  * @param d - blinding polynomial (not in NTT domain)
  */
-void set_carries_hat(poly *c_hat, const poly *c, poly d[][L + 1], unsigned int carry_range) {
+void set_carries_hat(poly *c_hat, const poly *c, poly d[][LACTX_L + 1], unsigned int carry_range) {
     unsigned int j, l;
-    poly_set_zero(c_hat, 0, N);
+    poly_set_zero(c_hat, 0, LACTX_N);
     poly z;
-    for (j = 1; j < L; j++) {
+    for (j = 1; j < LACTX_L; j++) {
         for (l = 0; l < carry_range; l++) {
             poly_easy_mul(&z, &d[l][j], j*carry_range + l,
                           (int) (2 * ((c->coef[j] >> l) & 1) - 1));
@@ -139,16 +139,16 @@ void set_carries_hat(poly *c_hat, const poly *c, poly d[][L + 1], unsigned int c
 }
 
 /**
- * Set d0_hat = sum_(j=0)^(L-1) (d0_j)^(d0_j)
+ * Set d0_hat = sum_(j=0)^(LACTX_L-1) (d0_j)^(d0_j)
  * @param d_hat - output (not in NTT)
  * @param d_ntt - input in NTT
  * @param carry_range
  */
-void set_d_hat(poly *d_hat, poly d_ntt[][L + 1], unsigned int carry_range) {
+void set_d_hat(poly *d_hat, poly d_ntt[][LACTX_L + 1], unsigned int carry_range) {
     unsigned int j, l;
-    poly_set_zero(d_hat, 0, N);
+    poly_set_zero(d_hat, 0, LACTX_N);
     poly z;
-    for (j = 1; j < L; j++) {
+    for (j = 1; j < LACTX_L; j++) {
         for (l = 0; l < carry_range; l++) {
             poly_pointwise_montgomery(&z, &d_ntt[l][j], &d_ntt[l][j]);
             poly_add(d_hat, d_hat, &z);
@@ -159,23 +159,23 @@ void set_d_hat(poly *d_hat, poly d_ntt[][L + 1], unsigned int carry_range) {
 }
 
 /**
- * Creates z_hat = ∑_(i=0)^(L−1) z0_i(z0_i−x2rot(1,i))
+ * Creates z_hat = ∑_(i=0)^(LACTX_L−1) z0_i(z0_i−x2rot(1,i))
  * @param z_hat - output
- * @param z -  z[L] (not in NTT domain)
- * @param z_ntt - z[L] (in NTT domain)
+ * @param z -  z[LACTX_L] (not in NTT domain)
+ * @param z_ntt - z[LACTX_L] (in NTT domain)
  * @param x2 - challenge (not in NTT domain)
  */
-void set_z_hat(poly *z_hat, poly z[], poly z_ntt[][L + 1], poly *x2, unsigned int carry_range) {
+void set_z_hat(poly *z_hat, poly z[], poly z_ntt[][LACTX_L + 1], poly *x2, unsigned int carry_range) {
     unsigned int i, l;
-    poly_set_zero(z_hat, 0, N);
+    poly_set_zero(z_hat, 0, LACTX_N);
     poly tmp;
-    for (i = 1; i < L; i++) {
+    for (i = 1; i < LACTX_L; i++) {
         for (l = 0; l < carry_range; l++) {
             poly_easy_mul(&tmp, x2, i*carry_range + l, 1);
             poly_sub(&tmp, &z[i*carry_range + l], &tmp); // (z_j - x2rot(1, j))
             poly_ntt(&tmp);
             poly_pointwise_montgomery(&tmp, &tmp, &z_ntt[l][i]); // z_j(z_j - x2rot(1, j))
-            poly_add(z_hat, z_hat, &tmp); // sum_{i=0}^{L-1} z_i(z_i - x2rot(1, i))
+            poly_add(z_hat, z_hat, &tmp); // sum_{i=0}^{LACTX_L-1} z_i(z_i - x2rot(1, i))
         }
     }
     poly_inv_ntt_to_mont(z_hat);
@@ -184,25 +184,25 @@ void set_z_hat(poly *z_hat, poly z[], poly z_ntt[][L + 1], poly *x2, unsigned in
 
 void set_s_hat(poly *s_hat, poly z[], unsigned int carry_range) {
     unsigned int i, l;
-    poly_set_zero(s_hat, 0, N);
+    poly_set_zero(s_hat, 0, LACTX_N);
     poly tmp;
-    for (i = 1; i < L; i++) {
+    for (i = 1; i < LACTX_L; i++) {
         for (l = 0; l < carry_range; l++) {
             poly_easy_mul(&tmp, &z[i*carry_range + l], i*carry_range + l, 1);
-            poly_add(s_hat, s_hat, &tmp); // sum_{i=0}^{L-1} z_i(z_i - x2rot(1, i))
+            poly_add(s_hat, s_hat, &tmp); // sum_{i=0}^{LACTX_L-1} z_i(z_i - x2rot(1, i))
         }
     }
     poly_reduce_exact(s_hat);
 }
 
-void set_s_hat_pp(poly *z_hat_pp, poly z_ntt[][L + 1], unsigned int carry_range) {
+void set_s_hat_pp(poly *z_hat_pp, poly z_ntt[][LACTX_L + 1], unsigned int carry_range) {
     unsigned int i, l;
-    poly_set_zero(z_hat_pp, 0, N);
+    poly_set_zero(z_hat_pp, 0, LACTX_N);
     poly tmp;
-    for (i = 1; i < L; i++) {
+    for (i = 1; i < LACTX_L; i++) {
         for (l = 0; l < carry_range; l++) {
             poly_pointwise_montgomery(&tmp, &z_ntt[l][i], &z_ntt[l][i]); // z_j(z_j - x2rot(1, j))
-            poly_add(z_hat_pp, z_hat_pp, &tmp); // sum_{i=0}^{L-1} z_i(z_i - x2rot(1, i))
+            poly_add(z_hat_pp, z_hat_pp, &tmp); // sum_{i=0}^{LACTX_L-1} z_i(z_i - x2rot(1, i))
         }
     }
     poly_inv_ntt_to_mont(z_hat_pp);
@@ -210,46 +210,46 @@ void set_s_hat_pp(poly *z_hat_pp, poly z_ntt[][L + 1], unsigned int carry_range)
 }
 
 /**
- * Set d_hat_p = sum_{j=0}^{L-1} d_j - 2(d_{j+1}) * rot(N - 1, -1)
+ * Set d_hat_p = sum_{j=0}^{LACTX_L-1} d_j - 2(d_{j+1}) * rot(LACTX_N - 1, -1)
  * @param d_hat_p - output polynomial (not in NTT domain)
- * @param d - blinding polynomial (not in NTT domain) [L + 1][carry_range]
+ * @param d - blinding polynomial (not in NTT domain) [LACTX_L + 1][carry_range]
  */
-void set_d_hat_p(poly *d_hat_p, poly d[][L + 1], unsigned int carry_range) {
+void set_d_hat_p(poly *d_hat_p, poly d[][LACTX_L + 1], unsigned int carry_range) {
     unsigned int j, l;
-    poly_set_zero(d_hat_p, 0, N);
+    poly_set_zero(d_hat_p, 0, LACTX_N);
     poly tmp, d_ntt;
-    for (j = 0; j < L; j++) {
+    for (j = 0; j < LACTX_L; j++) {
         for (l = 0; l < carry_range; l++) {
-            if (j + 1 < L) {
-                poly_easy_mul(&tmp, &d[l][j + 1], N - ((j + 1) * carry_range + l) + (j + 1) - 1, -(1 << l));
+            if (j + 1 < LACTX_L) {
+                poly_easy_mul(&tmp, &d[l][j + 1], LACTX_N - ((j + 1) * carry_range + l) + (j + 1) - 1, -(1 << l));
                 poly_sub(d_hat_p, d_hat_p, &tmp);
                 poly_sub(d_hat_p, d_hat_p, &tmp);
             }
-            poly_easy_mul(&tmp, &d[l][j], N - (j*carry_range + l) + j, -(1 << l));
+            poly_easy_mul(&tmp, &d[l][j], LACTX_N - (j * carry_range + l) + j, -(1 << l));
             poly_add(d_hat_p, d_hat_p, &tmp);
         }
     }
 }
 
 /**
- * Set z_hat_p = sum_{j=0}^{L-1} z_j - 2(z_{j+1}) * rot(N - 1, -1)
+ * Set z_hat_p = sum_{j=0}^{LACTX_L-1} z_j - 2(z_{j+1}) * rot(LACTX_N - 1, -1)
  * @param z_hat_p - output polynomial (not in NTT domain)
- * @param z - blinding polynomial (in NTT domain) [L + 1][carry_range]
+ * @param z - blinding polynomial (in NTT domain) [LACTX_L + 1][carry_range]
  */
 void set_z_hat_p(poly *z_hat_p, poly z[], unsigned int carry_range) {
     unsigned int j, l;
-    poly_set_zero(z_hat_p, 0, N);
+    poly_set_zero(z_hat_p, 0, LACTX_N);
     poly tmp;
-    poly_set_zero(&tmp, 0, N);
-    for (j = 0; j < L; j++) {
+    poly_set_zero(&tmp, 0, LACTX_N);
+    for (j = 0; j < LACTX_L; j++) {
         for (l = 0; l < carry_range; l++) {
-            if (j + 1 < L) {
-                poly_easy_mul(&tmp, &z[(j + 1) * carry_range + l], N - ((j + 1) * carry_range + l) + (j + 1) - 1,
+            if (j + 1 < LACTX_L) {
+                poly_easy_mul(&tmp, &z[(j + 1) * carry_range + l], LACTX_N - ((j + 1) * carry_range + l) + (j + 1) - 1,
                               -(1 << l));
                 poly_sub(z_hat_p, z_hat_p, &tmp);
                 poly_sub(z_hat_p, z_hat_p, &tmp);
             }
-            poly_easy_mul(&tmp, &z[j*carry_range + l], N - (j*carry_range + l) + j, -(1 << l));
+            poly_easy_mul(&tmp, &z[j*carry_range + l], LACTX_N - (j * carry_range + l) + j, -(1 << l));
             poly_add(z_hat_p, z_hat_p, &tmp);
         }
     }
@@ -276,11 +276,11 @@ void lactx_header_carry(
         header_t *header,
         unsigned int out_len,
         coin_t *out_coins,
-        uint8_t out_masks[][m - D][r_BYTES],
+        uint8_t out_masks[][LACTX_m - D][r_BYTES],
         uint64_t *v_out,
         unsigned int in_len,
         coin_t *in_coins,
-        uint8_t in_masks[][m - D][r_BYTES],
+        uint8_t in_masks[][LACTX_m - D][r_BYTES],
         uint64_t *v_in) {
 
     keccak_state state;
@@ -298,21 +298,21 @@ void lactx_header_carry(
     poly c1_hat;
     poly c0_hat_p;
     poly c1_hat_p;
-    uint8_t d0_seed[in_carries][L][N/8 * (in_carry_bits + 1)];
-    poly d0[in_carries][(L+1)];
-    poly d0_ntt[in_carries][(L+1)];
-    uint8_t d1_seed[out_carries][L][N/8 * (out_carry_bits + 1)];
-    poly d1[out_carries][(L+1)];
-    poly d1_ntt[out_carries][(L+1)];
+    uint8_t d0_seed[in_carries][LACTX_L][LACTX_N / 8 * (in_carry_bits + 1)];
+    poly d0[in_carries][(LACTX_L + 1)];
+    poly d0_ntt[in_carries][(LACTX_L + 1)];
+    uint8_t d1_seed[out_carries][LACTX_L][LACTX_N / 8 * (out_carry_bits + 1)];
+    poly d1[out_carries][(LACTX_L + 1)];
+    poly d1_ntt[out_carries][(LACTX_L + 1)];
 
     poly d0_hat;
     poly d1_hat;
     poly d0_hat_p;
     poly d1_hat_p;
 
-    uint8_t r_bytes[out_len][m - D][r_BYTES];
-    uint8_t r1_bytes[out_len][m - D][r1_BYTES];
-    uint8_t r2_bytes[out_len][m - D][r2_BYTES];
+    uint8_t r_bytes[out_len][LACTX_m - D][r_BYTES];
+    uint8_t r1_bytes[out_len][LACTX_m - D][r1_BYTES];
+    uint8_t r2_bytes[out_len][LACTX_m - D][r2_BYTES];
 
     poly_m s;
     poly_m s_t1;
@@ -366,12 +366,12 @@ void lactx_header_carry(
     // Create input carriers if there are two inputs.
     if (header->in_len >= 2) {
         set_carries(&c0, v_in, in_len); // c0
-        poly_set_zero(&c0_hat, 0, N);
-        poly_set_zero(&c0_hat_p, 0, N);
-        poly_set_zero(&d0_hat, 0, N);
-        poly_set_zero(&d0_hat_p, 0, N);
-        for (j = 0; j < L; j++) {
-            // c0_hat_p = [c0_j - 2c0_(j+1)]_(j=0)^(L-1)
+        poly_set_zero(&c0_hat, 0, LACTX_N);
+        poly_set_zero(&c0_hat_p, 0, LACTX_N);
+        poly_set_zero(&d0_hat, 0, LACTX_N);
+        poly_set_zero(&d0_hat_p, 0, LACTX_N);
+        for (j = 0; j < LACTX_L; j++) {
+            // c0_hat_p = [c0_j - 2c0_(j+1)]_(j=0)^(LACTX_L-1)
             c0_hat_p.coef[j] = c0.coef[j] - 2*c0.coef[j + 1];
         }
 
@@ -379,99 +379,99 @@ void lactx_header_carry(
         for (l = 0; l < in_carries; l++)
             get_custom_value_masks(d0[l], d0_seed[l], &c0, in_carry_bits);
 
-        // Set zeros for j = 0 and j = L
+        // Set zeros for j = 0 and j = LACTX_L
         for (l = 0; l < in_carries; l++) {
-            poly_set_zero(&d0[l][0], 0, N);
-            poly_set_zero(&d0_ntt[l][0], 0, N);
-            poly_set_zero(&d0[l][L], 0, N);
-            poly_set_zero(&d0_ntt[l][L], 0, N);
+            poly_set_zero(&d0[l][0], 0, LACTX_N);
+            poly_set_zero(&d0_ntt[l][0], 0, LACTX_N);
+            poly_set_zero(&d0[l][LACTX_L], 0, LACTX_N);
+            poly_set_zero(&d0_ntt[l][LACTX_L], 0, LACTX_N);
         }
 
         for (l = 0; l < in_carries; l++) {
-            for (j = 1; j < L; j++) {
+            for (j = 1; j < LACTX_L; j++) {
                 poly_set(&d0_ntt[l][j], &d0[l][j]);
                 poly_ntt(&d0_ntt[l][j]);
             }
         }
-        // c0_hat = sum_{j=0}^{L-1} d0_j * rot(2c0_j - 1, j)
+        // c0_hat = sum_{j=0}^{LACTX_L-1} d0_j * rot(2c0_j - 1, j)
         set_carries_hat(&c0_hat, &c0, d0, in_carries);
         set_d_hat(&d0_hat, d0_ntt, in_carries);
 
-        // d0_hat_p = sum_{j=0}^{L-1} d0_j - 2(d0_{j+1}) * rot(1, 1)
+        // d0_hat_p = sum_{j=0}^{LACTX_L-1} d0_j - 2(d0_{j+1}) * rot(1, 1)
         set_d_hat_p(&d0_hat_p, d0, in_carries);
     }
 
     // Create output headers if there are two outputs.
     if (header->out_len >= 2) {
         set_carries(&c1, v_out, out_len); // c1
-        poly_set_zero(&c1_hat, 0, N);
-        poly_set_zero(&c1_hat_p, 0, N);
-        poly_set_zero(&d1_hat, 0, N);
-        poly_set_zero(&d1_hat_p, 0, N);
-        for (j = 0; j < L; j++) {
-            // c1_hat_p = [c1_j - 2c1_(j+1)]_(j=0)^(L-1)
+        poly_set_zero(&c1_hat, 0, LACTX_N);
+        poly_set_zero(&c1_hat_p, 0, LACTX_N);
+        poly_set_zero(&d1_hat, 0, LACTX_N);
+        poly_set_zero(&d1_hat_p, 0, LACTX_N);
+        for (j = 0; j < LACTX_L; j++) {
+            // c1_hat_p = [c1_j - 2c1_(j+1)]_(j=0)^(LACTX_L-1)
             c1_hat_p.coef[j] = c1.coef[j] - 2*c1.coef[j + 1];
         }
         // Carry Masks
         for (l = 0; l < out_carries; l++)
             get_custom_value_masks(d1[l], d1_seed[l], &c1, out_carry_bits);
 
-        // Set zeros for j = 0 and j = L
+        // Set zeros for j = 0 and j = LACTX_L
         for (l = 0; l < out_carries; l++) {
-            poly_set_zero(&d1[l][0], 0, N);
-            poly_set_zero(&d1_ntt[l][0], 0, N);
-            poly_set_zero(&d1[l][L], 0, N);
-            poly_set_zero(&d1_ntt[l][L], 0, N);
+            poly_set_zero(&d1[l][0], 0, LACTX_N);
+            poly_set_zero(&d1_ntt[l][0], 0, LACTX_N);
+            poly_set_zero(&d1[l][LACTX_L], 0, LACTX_N);
+            poly_set_zero(&d1_ntt[l][LACTX_L], 0, LACTX_N);
         }
 
         for (l = 0; l < out_carries; l++) {
-            for (j = 1; j < L; j++) {
+            for (j = 1; j < LACTX_L; j++) {
                 poly_set(&d1_ntt[l][j], &d1[l][j]);
                 poly_ntt(&d1_ntt[l][j]);
             }
         }
-        // c1_hat = sum_{j=0}^{L-1} d1_j * rot(2c1_j - 1, j)
+        // c1_hat = sum_{j=0}^{LACTX_L-1} d1_j * rot(2c1_j - 1, j)
         set_carries_hat(&c1_hat, &c1, d1, out_carries);
         set_d_hat(&d1_hat, d1_ntt, out_carries);
 
-        // d1_hat_p = sum_{j=0}^{L-1} d1_j - 2(d1_{j+1}) * rot(1, 1)
+        // d1_hat_p = sum_{j=0}^{LACTX_L-1} d1_j - 2(d1_{j+1}) * rot(1, 1)
         set_d_hat_p(&d1_hat_p, d1, out_carries);
     }
 
     // Assign u, t1, R, t2 if in_len >= 2 or out_len >= 2.
     if (header->in_len >= 2 || header->out_len >= 2) {
-        poly_m_set_zero(s_u, 0, N);
-        poly_m_set_zero(&s_t1, 0, N);
-        poly_m_set_zero(&s_t2, 0, N);
+        poly_m_set_zero(s_u, 0, LACTX_N);
+        poly_m_set_zero(&s_t1, 0, LACTX_N);
+        poly_m_set_zero(&s_t2, 0, LACTX_N);
 
-        // u_i = H[0^N, 0^N, r_0, .., r_(m-3)]
-        // t1_i = H[0^N, 0^N, r_(1,0), .., r_(1, m-3)]
-        // t2_i = H[0^N, 0^N, r_(2,0), .., r_(2, m-3)]
-        poly_m_set_zero(&s, 0, N);
+        // u_i = H[0^LACTX_N, 0^LACTX_N, r_0, .., r_(LACTX_m-3)]
+        // t1_i = H[0^LACTX_N, 0^LACTX_N, r_(1,0), .., r_(1, LACTX_m-3)]
+        // t2_i = H[0^LACTX_N, 0^LACTX_N, r_(2,0), .., r_(2, LACTX_m-3)]
+        poly_m_set_zero(&s, 0, LACTX_N);
         get_masks_tau(&s, r_bytes[0]);
         poly_m_add(s_u, s_u, &s);
 
-        poly_m_set_zero(&s, 0, N);
+        poly_m_set_zero(&s, 0, LACTX_N);
         get_masks_tau1(&s, r1_bytes[0]);
         poly_m_add(&s_t1, &s_t1, &s);
 
-        poly_m_set_zero(&s, 0, N);
+        poly_m_set_zero(&s, 0, LACTX_N);
         get_masks_tau2(&s, r2_bytes[0]);
         poly_m_add(&s_t2, &s_t2, &s);
 
         if (header->in_len >= 2) {
-            // u_i = H[-c0_hat_p, 0^N, 0^N, r_0, .., r_(m-3)]
-            // t1_i = H[0^N, 0^N, c0_hat, r_(1,0), .., r_(1, m-3)]
-            // t2_i = H[-d0_hat_p, 0^N, d0_hat, r_(2,0), .., r_(2, m-3)]
+            // u_i = H[-c0_hat_p, 0^LACTX_N, 0^LACTX_N, r_0, .., r_(LACTX_m-3)]
+            // t1_i = H[0^LACTX_N, 0^LACTX_N, c0_hat, r_(1,0), .., r_(1, LACTX_m-3)]
+            // t2_i = H[-d0_hat_p, 0^LACTX_N, d0_hat, r_(2,0), .., r_(2, LACTX_m-3)]
             poly_sub(&s_u->vec[0], &s_u->vec[0], &c0_hat_p);
             poly_add(&s_t1.vec[2], &s_t1.vec[2], &c0_hat);
             poly_sub(&s_t2.vec[0], &s_t2.vec[0], &d0_hat_p);
             poly_add(&s_t2.vec[2], &s_t2.vec[2], &d0_hat);
         }
         if (header->out_len >= 2) {
-            // u_i = H[c1_hat_p - c0_hat_p, 0^N, 0^N, r_0, .., r_(m-3)]
-            // t1_i = H[0^N, c1_hat, c0_hat, r_(1,0), .., r_(1, m-3)]
-            // t2_i = H[d1_hat_p - d0_hat_p, d1_hat, d0_hat, r_(2,0), .., r_(2, m-3)]
+            // u_i = H[c1_hat_p - c0_hat_p, 0^LACTX_N, 0^LACTX_N, r_0, .., r_(LACTX_m-3)]
+            // t1_i = H[0^LACTX_N, c1_hat, c0_hat, r_(1,0), .., r_(1, LACTX_m-3)]
+            // t2_i = H[d1_hat_p - d0_hat_p, d1_hat, d0_hat, r_(2,0), .., r_(2, LACTX_m-3)]
             poly_add(&s_u->vec[0], &s_u->vec[0], &c1_hat_p);
             poly_add(&s_t1.vec[1], &s_t1.vec[1], &c1_hat);
             poly_add(&s_t2.vec[0], &s_t2.vec[0], &d1_hat_p);
@@ -506,7 +506,7 @@ void lactx_header_carry(
         poly_challenge(&x1_ntt, x1_bytes);
         poly_ntt(&x1_ntt);
 
-        // t2_i = H[x1(d1_hat_p - d0_hat_p), d1_hat - d0_hat, r_(2,0), .., r_(2, m-3)]
+        // t2_i = H[x1(d1_hat_p - d0_hat_p), d1_hat - d0_hat, r_(2,0), .., r_(2, LACTX_m-3)]
         poly_m_ntt(&s_t2);
         poly_pointwise_montgomery(&s_t2.vec[0], &s_t2.vec[0], &x1_ntt);
         poly_inv_ntt_to_mont(&s_t2.vec[0]);
@@ -532,9 +532,9 @@ void lactx_header_carry(
 
         if (in_len >= 2) {
             // z0_i = x2rot(c0_i, i) + d0_i
-            for (i = 0; i < L; i++) {
+            for (i = 0; i < LACTX_L; i++) {
                 for (l = 0; l < in_carries; l++) {
-                    poly_set_zero(&header->z0[l], 0, N);
+                    poly_set_zero(&header->z0[l], 0, LACTX_N);
                     if (c0.coef[i] == 0) {
                         poly_set(&header->z0[i*in_carries + l], &d0[l][i]);
                     } else {
@@ -553,9 +553,9 @@ void lactx_header_carry(
 
         if (out_len >= 2) {
             // z1_i = x2rot(c1_i, i) + d1_i
-            for (i = 0; i < L; i++) {
+            for (i = 0; i < LACTX_L; i++) {
                 for (l = 0; l < out_carries; l++) {
-                    poly_set_zero(&header->z1[l], 0, N);
+                    poly_set_zero(&header->z1[l], 0, LACTX_N);
                     if (c1.coef[i] == 0) {
                         poly_set(&header->z1[i*out_carries + l], &d1[l][i]);
                     } else {
@@ -578,7 +578,7 @@ void lactx_header_carry(
         poly_m_reduce(&s_t1);
         poly_m_inv_ntt(&s_t2);
         poly_m_reduce(&s_t2);
-        for (j = 0; j < m - D; j++) {
+        for (j = 0; j < LACTX_m - D; j++) {
             poly_pointwise_montgomery(&header->R[j], &s_u->vec[j + D], &x1_ntt);
             poly_inv_ntt_to_mont(&header->R[j]);
             poly_add(&header->R[j], &header->R[j], &s_t1.vec[j + D]);
@@ -602,13 +602,13 @@ void lactx_header_carry(
 
     if (header->in_len >= 2 || header->out_len >= 2) {
 
-        poly_m_set_zero(&s, 0, N);
+        poly_m_set_zero(&s, 0, LACTX_N);
         if (header->in_len >= 2) {
-            poly header_z0_ntt[in_carries][L + 1];
+            poly header_z0_ntt[in_carries][LACTX_L + 1];
             for (l = 0; l < in_carries; l++) {
-                poly_set_zero(&header_z0_ntt[l][0], 0, N);
-                poly_set_zero(&header_z0_ntt[l][L], 0, N);
-                for (j = 0; j < L; j++) {
+                poly_set_zero(&header_z0_ntt[l][0], 0, LACTX_N);
+                poly_set_zero(&header_z0_ntt[l][LACTX_L], 0, LACTX_N);
+                for (j = 0; j < LACTX_L; j++) {
                     poly_set(&header_z0_ntt[l][j], &header->z0[j*in_carries + l]);
                     poly_ntt(&header_z0_ntt[l][j]);
                 }
@@ -630,11 +630,11 @@ void lactx_header_carry(
         }
 
         if (header->out_len >= 2) {
-            poly header_z1_ntt[out_carries][L+1];
+            poly header_z1_ntt[out_carries][LACTX_L + 1];
             for (l = 0; l < out_carries; l++) {
-                poly_set_zero(&header_z1_ntt[l][0], 0, N);
-                poly_set_zero(&header_z1_ntt[l][L], 0, N);
-                for (j = 0; j < L; j++) {
+                poly_set_zero(&header_z1_ntt[l][0], 0, LACTX_N);
+                poly_set_zero(&header_z1_ntt[l][LACTX_L], 0, LACTX_N);
+                for (j = 0; j < LACTX_L; j++) {
                     poly_set(&header_z1_ntt[l][j], &header->z1[j*out_carries + l]);
                     poly_ntt(&header_z1_ntt[l][j]);
                 }
@@ -662,7 +662,7 @@ void lactx_header_carry(
         poly_inv_ntt_to_mont(&s.vec[0]);
 
         // Check aggregate z
-        // z0_hat = ∑_(i=0)^(L−1)(z0_j− 2z0_j+1rot(1,i)
+        // z0_hat = ∑_(i=0)^(LACTX_L−1)(z0_j− 2z0_j+1rot(1,i)
         if (poly_chknorm(&s.vec[1], ZAGG) != 0) {
             DEBUG_PRINT(("Rejected aggregated z1\n"));
             goto rejection_point_carry;;
@@ -673,7 +673,7 @@ void lactx_header_carry(
             goto rejection_point_carry;;
         }
 
-        for (j = 0; j < m - D; j++) {
+        for (j = 0; j < LACTX_m - D; j++) {
             poly_set(&s.vec[j + D], &header->R[j]);
         }
 
@@ -721,11 +721,11 @@ int lactx_header_create(
         header_t *header,
         unsigned int out_len,
         coin_t *out_coins,
-        uint8_t out_masks[][m - D][r_BYTES],
+        uint8_t out_masks[][LACTX_m - D][r_BYTES],
         uint64_t *v_out,
         unsigned int in_len,
         coin_t *in_coins,
-        uint8_t in_masks[][m - D][r_BYTES],
+        uint8_t in_masks[][LACTX_m - D][r_BYTES],
         uint64_t *v_in) {
 
 
@@ -751,7 +751,7 @@ int lactx_header_create(
     uint8_t sig_bytes[get_sig_bytes(in_len, out_len)];
 
     poly x0_ntt;
-    uint8_t r3_bytes[out_len][m - D][r3_BYTES];
+    uint8_t r3_bytes[out_len][LACTX_m - D][r3_BYTES];
 
     poly tmp;
     poly_n tmpn;
@@ -773,15 +773,15 @@ int lactx_header_create(
     // Create the summation proof
     // pk = sum out.u'_i - sum in.u_i + sum header.u_i
     // y = sum_{i=0}^{out_len - 1} y_i
-    poly_n_set_zero(&header->pk, 0, N);
-    poly_n_set_zero(&header_y, 0, N);
-    poly_m_set_zero(&s_y, 0, N);
-    for (j = 0; j < m - D; j++) {
-        poly_set_zero(&header->sigma[j], 0, N);
+    poly_n_set_zero(&header->pk, 0, LACTX_N);
+    poly_n_set_zero(&header_y, 0, LACTX_N);
+    poly_m_set_zero(&s_y, 0, LACTX_N);
+    for (j = 0; j < LACTX_m - D; j++) {
+        poly_set_zero(&header->sigma[j], 0, LACTX_N);
     }
     for (i = 0; i < in_len; i++) {
         poly_n_sub(&header->pk, &header->pk, &in_coins[i].u);
-        for (j = 0; j < m - D; j++) {
+        for (j = 0; j < LACTX_m - D; j++) {
             set_mask_tau(&tmp, in_masks[i][j]);
             poly_sub(&header->sigma[j], &header->sigma[j], &tmp);
         }
@@ -789,7 +789,7 @@ int lactx_header_create(
 
     for (i = 0; i < out_len; i++) {
         poly_n_add(&header->pk, &header->pk, &out_coins[i].u);
-        for (j = 0; j < m - D; j++) {
+        for (j = 0; j < LACTX_m - D; j++) {
             set_mask_tau(&tmp, out_masks[i][j]);
             poly_add(&header->sigma[j], &header->sigma[j], &tmp);
 
@@ -800,7 +800,7 @@ int lactx_header_create(
 
     if (header->in_len >= 2 || header->out_len >= 2) {
         poly_n_add(&header->pk, &header->pk, &header->u);
-        for (j = 0; j < m - D; j++) {
+        for (j = 0; j < LACTX_m - D; j++) {
             poly_set(&tmp, &s_u.vec[j + D]);
             poly_inv_ntt(&tmp);
             poly_reduce_exact(&tmp);
@@ -831,7 +831,7 @@ int lactx_header_create(
     poly_ntt(&x0_ntt);
 
     // Create the one-time signature
-    for (j = 0; j < m - D; j++) {
+    for (j = 0; j < LACTX_m - D; j++) {
         poly_ntt(&header->sigma[j]);
         poly_pointwise_montgomery(&header->sigma[j], &header->sigma[j], &x0_ntt);
         poly_inv_ntt_to_mont(&header->sigma[j]);
@@ -846,8 +846,8 @@ int lactx_header_create(
 
     // Set hints for y
     poly_n header_y2;
-    poly_m_set_zero(&s, 0, N);
-    for (j = 0; j < m - D; j++) {
+    poly_m_set_zero(&s, 0, LACTX_N);
+    for (j = 0; j < LACTX_m - D; j++) {
         poly_set(&s.vec[j + D], &header->sigma[j]);
         poly_ntt(&s.vec[j + D]);
     }
@@ -890,7 +890,7 @@ int lactx_minted_header_create(
         context_t *ctx,
         header_t *header,
         coin_t *out_coins,
-        uint8_t out_mask[m - D][r_BYTES],
+        uint8_t out_mask[LACTX_m - D][r_BYTES],
         uint64_t v_out,
         coin_t *in_coins,
         uint64_t coinbase) {
@@ -911,7 +911,7 @@ int lactx_minted_header_create(
     uint8_t pk_bytes[pk_HIGHBITS];
     uint8_t y_bytes[y_HIGHBITS];
 
-    uint8_t r3_bytes[m - D][r3_BYTES];
+    uint8_t r3_bytes[LACTX_m - D][r3_BYTES];
 
     poly x0_ntt;
     poly_n tmp;
@@ -925,13 +925,13 @@ int lactx_minted_header_create(
 
     rejection_point:
 
-    poly_n_set_zero(&header_y, 0, N);
+    poly_n_set_zero(&header_y, 0, LACTX_N);
 
     // pk = sum out.u'_i - sum in.u_i + sum header.u_i
     // y = sum_{i=0}^{out_len - 1} y_i
-    poly_m_set_zero(&s_y, 0, N);
-    for (j = 0; j < m - D; j++) {
-        poly_set_zero(&header->sigma[j], 0, N);
+    poly_m_set_zero(&s_y, 0, LACTX_N);
+    for (j = 0; j < LACTX_m - D; j++) {
+        poly_set_zero(&header->sigma[j], 0, LACTX_N);
     }
 
     // create out_coins
@@ -947,7 +947,7 @@ int lactx_minted_header_create(
     coin_hash(ctx, header->delta, u_bytes);
 
     // sigma
-    for (j = 0; j < m - D; j++) {
+    for (j = 0; j < LACTX_m - D; j++) {
         set_mask_tau(&header->sigma[j], out_mask[j]);
         get_mask_tau3(&s_y.vec[j + D], r3_bytes[j]);
     }
@@ -955,14 +955,14 @@ int lactx_minted_header_create(
     // Create output headers if there are two outputs.
     uint64_t  v_outs[2] = {v_out, coinbase - v_out};
     set_carries(&c1, v_outs, 2);
-    poly_set_zero(&c1_hat_p, 0, N);
-    for (j = 0; j < L; j++) {
-        // c1_hat_p = [c1_j - 2c1_(j+1)]_(j=0)^(L-1)
+    poly_set_zero(&c1_hat_p, 0, LACTX_N);
+    for (j = 0; j < LACTX_L; j++) {
+        // c1_hat_p = [c1_j - 2c1_(j+1)]_(j=0)^(LACTX_L-1)
         c1_hat_p.coef[j] = c1.coef[j] - 2*c1.coef[j + 1];
     }
 
     // Assign u.
-    poly_m_set_zero(&s_u, 0, N);
+    poly_m_set_zero(&s_u, 0, LACTX_N);
     poly_add(&s_u.vec[0], &s_u.vec[0], &c1_hat_p);
 
     poly_m_ntt(&s_u);
@@ -996,7 +996,7 @@ int lactx_minted_header_create(
     poly_ntt(&x0_ntt);
 
     // Create the one-time signature
-    for (j = 0; j < m - D; j++) {
+    for (j = 0; j < LACTX_m - D; j++) {
         poly_ntt(&header->sigma[j]);
         poly_pointwise_montgomery(&header->sigma[j], &header->sigma[j], &x0_ntt);
         poly_inv_ntt_to_mont(&header->sigma[j]);
@@ -1011,8 +1011,8 @@ int lactx_minted_header_create(
 
     // Set hints for y
     poly_n header_y2;
-    poly_m_set_zero(&s_u, 0, N);
-    for (j = 0; j < m - D; j++) {
+    poly_m_set_zero(&s_u, 0, LACTX_N);
+    for (j = 0; j < LACTX_m - D; j++) {
         poly_set(&s_u.vec[j + D], &header->sigma[j]);
         poly_ntt(&s_u.vec[j + D]);
     }
@@ -1066,7 +1066,7 @@ int lactx_minted_header_verify(context_t *ctx, header_t *header) {
     unsigned int j;
 
     // Check norms
-    for (j = 0; j < m - D; j++) {
+    for (j = 0; j < LACTX_m - D; j++) {
         if (poly_chknorm(&header->sigma[j], header->out_len * TAU3) != 0)
             return 0;
     }
@@ -1075,8 +1075,8 @@ int lactx_minted_header_verify(context_t *ctx, header_t *header) {
     poly_ntt(&x0_ntt);
 
     // Verify the signature
-    poly_m_set_zero(&s, 0, N);
-    for (j = 0; j < m - D; j++) {
+    poly_m_set_zero(&s, 0, LACTX_N);
+    for (j = 0; j < LACTX_m - D; j++) {
         poly_set(&s.vec[j + D], &header->sigma[j]);
         poly_ntt(&s.vec[j + D]);
     }
@@ -1114,9 +1114,9 @@ int lactx_minted_header_verify(context_t *ctx, header_t *header) {
     // Open u
     uint64_t  v_outs[2] = {header->v_out, header->v_in - header->v_out};
     set_carries(&c1, v_outs, 2);
-    poly_m_set_zero(&s, 0, N);
-    for (j = 0; j < L; j++) {
-        // c1_hat_p = [c1_j - 2c1_(j+1)]_(j=0)^(L-1)
+    poly_m_set_zero(&s, 0, LACTX_N);
+    for (j = 0; j < LACTX_L; j++) {
+        // c1_hat_p = [c1_j - 2c1_(j+1)]_(j=0)^(LACTX_L-1)
         s.vec[0].coef[j] = c1.coef[j] - 2*c1.coef[j + 1];
     }
 
@@ -1181,7 +1181,7 @@ int lactx_header_verify(context_t *ctx, header_t *header) {
     }
 
     // Check norms
-    for (j = 0; j < m - D; j++) {
+    for (j = 0; j < LACTX_m - D; j++) {
         if (poly_chknorm(&header->sigma[j], (header->out_len + header->in_len) * TAU3) != 0) {
             DEBUG_PRINT(("Large sigma\n"));
             return 0;
@@ -1189,19 +1189,19 @@ int lactx_header_verify(context_t *ctx, header_t *header) {
     }
 
     if (header->in_len >= 2) {
-        for (j = 0; j < L; j++)
+        for (j = 0; j < LACTX_L; j++)
             if (poly_chknorm(&header->z0[j], in_alpha) != 0)
                 return 0;
     }
 
     if (header->out_len >= 2) {
-        for (j = 0; j < L; j++)
+        for (j = 0; j < LACTX_L; j++)
             if (poly_chknorm(&header->z1[j], out_alpha) != 0)
                 return 0;
     }
 
     if (header->in_len >= 2 || header->out_len >= 2) {
-        for (j = 0; j < m - D; j++) {
+        for (j = 0; j < LACTX_m - D; j++) {
             if (poly_chknorm(&header->R[j], TAU2) != 0)
                 return 0;
         }
@@ -1211,8 +1211,8 @@ int lactx_header_verify(context_t *ctx, header_t *header) {
     poly_ntt(&x0_ntt);
 
     // Verify the signature
-    poly_m_set_zero(&s, 0, N);
-    for (j = 0; j < m - D; j++) {
+    poly_m_set_zero(&s, 0, LACTX_N);
+    for (j = 0; j < LACTX_m - D; j++) {
         poly_set(&s.vec[j + D], &header->sigma[j]);
         poly_ntt(&s.vec[j + D]);
     }
@@ -1261,20 +1261,20 @@ int lactx_header_verify(context_t *ctx, header_t *header) {
         shake256_squeeze(x1_bytes, SEED_BYTES, &state);
         poly_challenge(&x1_ntt, x1_bytes);
         poly_ntt(&x1_ntt);
-        //poly_set_zero(&x1_ntt, 0, N);
+        //poly_set_zero(&x1_ntt, 0, LACTX_N);
 
         poly_challenge(&x2, header->x2);
         poly_set(&x2_ntt, &x2);
         poly_ntt(&x2_ntt);
 
-        // z0_hat = ∑_(i=0)^(L−1)(z0_j− 2z0_j+1rot(1,i)
-        poly_m_set_zero(&s, 0, N);
+        // z0_hat = ∑_(i=0)^(LACTX_L−1)(z0_j− 2z0_j+1rot(1,i)
+        poly_m_set_zero(&s, 0, LACTX_N);
         if (header->in_len >= 2) {
-            poly header_z0_ntt[in_carries][L + 1];
+            poly header_z0_ntt[in_carries][LACTX_L + 1];
             for (l = 0; l < in_carries; l++) {
-                poly_set_zero(&header_z0_ntt[l][0], 0, N);
-                poly_set_zero(&header_z0_ntt[l][L], 0, N);
-                for (j = 0; j < L; j++) {
+                poly_set_zero(&header_z0_ntt[l][0], 0, LACTX_N);
+                poly_set_zero(&header_z0_ntt[l][LACTX_L], 0, LACTX_N);
+                for (j = 0; j < LACTX_L; j++) {
                     poly_set(&header_z0_ntt[l][j], &header->z0[j*in_carries + l]);
                     poly_ntt(&header_z0_ntt[l][j]);
                 }
@@ -1288,11 +1288,11 @@ int lactx_header_verify(context_t *ctx, header_t *header) {
         }
 
         if (header->out_len >= 2) {
-            poly header_z1_ntt[out_carries][L+1];
+            poly header_z1_ntt[out_carries][LACTX_L + 1];
             for (l = 0; l < out_carries; l++) {
-                poly_set_zero(&header_z1_ntt[l][0], 0, N);
-                poly_set_zero(&header_z1_ntt[l][L], 0, N);
-                for (j = 0; j < L; j++) {
+                poly_set_zero(&header_z1_ntt[l][0], 0, LACTX_N);
+                poly_set_zero(&header_z1_ntt[l][LACTX_L], 0, LACTX_N);
+                for (j = 0; j < LACTX_L; j++) {
                     poly_set(&header_z1_ntt[l][j], &header->z1[j*out_carries + l]);
                     poly_ntt(&header_z1_ntt[l][j]);
                 }
@@ -1310,7 +1310,7 @@ int lactx_header_verify(context_t *ctx, header_t *header) {
         poly_inv_ntt_to_mont(&s.vec[0]);
 
         // Check aggregate z
-        // z0_hat = ∑_(i=0)^(L−1)(z0_j− 2z0_j+1rot(1,i)
+        // z0_hat = ∑_(i=0)^(LACTX_L−1)(z0_j− 2z0_j+1rot(1,i)
         if (poly_chknorm(&s.vec[1], ZAGG) != 0) {
             DEBUG_PRINT(("Larger z1_hat\n"));
             return 0;
@@ -1321,7 +1321,7 @@ int lactx_header_verify(context_t *ctx, header_t *header) {
             return 0;
         }
 
-        for (j = 0; j < m - D; j++) {
+        for (j = 0; j < LACTX_m - D; j++) {
             poly_set(&s.vec[j + D], &header->R[j]);
         }
 

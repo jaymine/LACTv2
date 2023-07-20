@@ -24,10 +24,10 @@
 
 int64_t montgomery_reduce(__int128 a);
 
-void ntt(int64_t a[N]);
+void ntt(int64_t a[LACTX_N]);
 
-void invntt_tomont(int64_t a[N]);
+void invntt_tomont(int64_t a[LACTX_N]);
 
-void invntt(int64_t a[N]);
+void invntt(int64_t a[LACTX_N]);
 
 #endif //LACTx_NTT_H

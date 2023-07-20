@@ -95,8 +95,8 @@ context_t lactx_init(uint8_t seed[SEED_BYTES]) {
     shake256(ctx.seed, SEED_BYTES, seed, SEED_BYTES);
     poly_matrix_expand(ctx.H, ctx.seed); // in NTT domain
 
-    poly_set_zero(&ctx.one_N, 0, N);
-    ctx.one_N.coef[N - 1] = -1;
+    poly_set_zero(&ctx.one_N, 0, LACTX_N);
+    ctx.one_N.coef[LACTX_N - 1] = -1;
     poly_ntt(&ctx.one_N);
     memset(ctx.q, 0x0, ORIGAMI_HASH_BYTES);
     ctx.bn_q = BN_bin2bn(ORIGAMI_Q, sizeof(ORIGAMI_Q), NULL);
@@ -155,7 +155,7 @@ void lactx_drop_store(store_t *store) {
 
 
 void lactx_key_copy(key out, key in) {
-    for (int i = 0; i < m - D; i++) {
+    for (int i = 0; i < LACTX_m - D; i++) {
         memcpy(out + i*r_BYTES, in + i*r_BYTES, r_BYTES);
     }
 }
@@ -194,7 +194,7 @@ void lactx_tx_free (ctx_t *tx) {
  * @param mask - secret mask for the output
  * @param s - supply coin.
  */
-void lactx_mint_tx_create(store_t *store, ctx_t *tx, uint8_t mask[m - D][r_BYTES], uint64_t s) {
+void lactx_mint_tx_create(store_t *store, ctx_t *tx, uint8_t mask[LACTX_m - D][r_BYTES], uint64_t s) {
     tx->header.in_len = 1;
     tx->header.out_len = 2;
 
@@ -369,8 +369,8 @@ int lactx_store_verify(store_t *store) {
     if (lactx_db_read(store, &aggr_pk, &aggr_u) == 0)
         return 0;
 
-    // u = H[bin(coinbase), 0^N, .., 0^N]
-    poly_m_set_zero(&s, 0, N);
+    // u = H[bin(coinbase), 0^LACTX_N, .., 0^LACTX_N]
+    poly_m_set_zero(&s, 0, LACTX_N);
     binary_set(&s.vec[0], store->coinbase);
     poly_ntt(&s.vec[0]);
     poly_matrix_mul(&u, store->ctx.H, &s);
@@ -379,8 +379,8 @@ int lactx_store_verify(store_t *store) {
     poly_n_highbits(&u, &u, u_ERROR);
     poly_n_add(&aggr_u, &aggr_u, &u);
 
-    // u = H[bin(supply), 0^N, .., 0^N]
-    poly_m_set_zero(&s, 0, N);
+    // u = H[bin(supply), 0^LACTX_N, .., 0^LACTX_N]
+    poly_m_set_zero(&s, 0, LACTX_N);
     binary_set(&s.vec[0], store->supply);
     poly_ntt(&s.vec[0]);
     poly_matrix_mul(&u, store->ctx.H, &s);

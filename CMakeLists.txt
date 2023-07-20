@@ -21,7 +21,7 @@ find_package(SQLite3 REQUIRED)
 if(SQLite3_FOUND)
     message ("LOG: SQLite3 found")
 else()
-    message (FATAL_ERROR "Cannot find SQLite3")
+    message (FATAL_ERROR "Cannot find SQLite3: sudo apt-get install sqlite3 libsqlite3-dev ")
 endif()
 
 

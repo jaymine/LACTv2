@@ -32,9 +32,9 @@
  */
 void binary_set(poly *b, uint64_t v) {
     uint16_t j;
-    for (j = 0; j < L; j++)
+    for (j = 0; j < LACTX_L; j++)
         b->coef[j] = (int64_t) (v >> j) & (int64_t) 1;
-    for (j = L; j < N; j++) {
+    for (j = LACTX_L; j < LACTX_N; j++) {
         b->coef[j] = 0;
     }
 }
@@ -57,8 +57,8 @@ void lactx_coin_copy(coin_t *a, coin_t *b) {
     poly_n_set(&a->u, &b->u);
     poly_n_set(&a->t1, &b->t1);
     poly_n_set(&a->t2_hints, &b->t2_hints);
-    for (i = 0; i < L; i++) poly_set(&a->z[i], &b->z[i]);
-    for (i = 0; i < m - D; i++) poly_set(&a->R[i], &b->R[i]);
+    for (i = 0; i < LACTX_L; i++) poly_set(&a->z[i], &b->z[i]);
+    for (i = 0; i < LACTX_m - D; i++) poly_set(&a->R[i], &b->R[i]);
 }
 
 /**
@@ -117,8 +117,8 @@ void lactx_mint_coin_create(context_t *ctx, coin_t *coin, uint64_t s) {
     coin->s = s;
 
     binary_set(&b, s);
-    // u = H[b, 0^N, .., 0^N]
-    poly_m_set_zero(&s_u, 0, N);
+    // u = H[b, 0^LACTX_N, .., 0^LACTX_N]
+    poly_m_set_zero(&s_u, 0, LACTX_N);
     poly_set(&s_u.vec[0], &b);
     poly_ntt(&s_u.vec[0]);
     poly_matrix_mul(&coin->u, ctx->H, &s_u);
@@ -136,11 +136,11 @@ void lactx_mint_coin_create(context_t *ctx, coin_t *coin, uint64_t s) {
  * @param v - coin amount
  * @return -1 if v is negative; 0 otherwise
  */
-int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES], uint64_t v) {
+int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[LACTX_m - D][r_BYTES], uint64_t v) {
 
-    uint8_t a_seed[L][a_BYTES];
-    uint8_t r1_seed[m - D][r1_BYTES];
-    uint8_t r2_seed[m - D][r2_BYTES];
+    uint8_t a_seed[LACTX_L][a_BYTES];
+    uint8_t r1_seed[LACTX_m - D][r1_BYTES];
+    uint8_t r2_seed[LACTX_m - D][r2_BYTES];
     int i, j;
     keccak_state state;
     uint8_t u_bytes[u_HIGHBITS];
@@ -154,8 +154,8 @@ int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES]
     poly x2_ntt;
     poly z;
     poly z_1;
-    poly a[L];
-    poly a_ntt[L];
+    poly a[LACTX_L];
+    poly a_ntt[LACTX_L];
     poly b;
     poly b_ntt;
     poly_m s_u;
@@ -170,16 +170,16 @@ int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES]
     coin->s = 0;  // Set supply coin value
 
     rejection_point:
-    get_value_masks(a, a_seed, &b); // Get a[L] where each a_i is in [-ALPHA, ALPHA]
-    for (i = 0; i < L; i++) {
+    get_value_masks(a, a_seed, &b); // Get a[LACTX_L] where each a_i is in [-ALPHA, ALPHA]
+    for (i = 0; i < LACTX_L; i++) {
         poly_set(&a_ntt[i], &a[i]);
         poly_ntt(&a_ntt[i]);
     }
 
-    // u = H[b, 0^N, 0^N, r_0, ..., r_(m-3)]
+    // u = H[b, 0^LACTX_N, 0^LACTX_N, r_0, ..., r_(LACTX_m-3)]
     poly_set(&s_u.vec[0], &b);
-    poly_set_zero(&s_u.vec[1], 0, N);
-    poly_set_zero(&s_u.vec[2], 0, N);
+    poly_set_zero(&s_u.vec[1], 0, LACTX_N);
+    poly_set_zero(&s_u.vec[2], 0, LACTX_N);
     get_masks_tau(&s_u, mask);  // ||r|| < TAU
     poly_m_ntt(&s_u);
     poly_matrix_mul(&coin->u, ctx->H, &s_u);
@@ -187,9 +187,9 @@ int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES]
     poly_n_reduce(&coin->u);
     poly_n_highbits(&coin->u, &coin->u, u_ERROR);
 
-    // t1 = H[0^N, sum_{i=0}^L a[i]rot(2(b_i - 1), i), 0^N, r_(2,0),.., r_(2, m-3)]
-    poly_m_set_zero(&s_t1, 0, N);
-    for (i = 0; i < L; i++) {
+    // t1 = H[0^LACTX_N, sum_{i=0}^LACTX_L a[i]rot(2(b_i - 1), i), 0^LACTX_N, r_(2,0),.., r_(2, LACTX_m-3)]
+    poly_m_set_zero(&s_t1, 0, LACTX_N);
+    for (i = 0; i < LACTX_L; i++) {
         poly_easy_mul(&z, &a[i], i, (int)(2 * b.coef[i] - 1));
         poly_add(&s_t1.vec[1], &s_t1.vec[1], &z);
     }
@@ -215,9 +215,9 @@ int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES]
     poly_set(&x1_ntt, &x1);
     poly_ntt(&x1_ntt);
 
-    // t2 = H[x1sum_{i=0}^L a[i], sum_{i=0}^L a[i]a[i], 0^N, r_(2,0),.., r_(2, m-3)]
-    poly_m_set_zero(&s_t2, 0, N);
-    for (i = 0; i < L; i++) {
+    // t2 = H[x1sum_{i=0}^LACTX_L a[i], sum_{i=0}^LACTX_L a[i]a[i], 0^LACTX_N, r_(2,0),.., r_(2, LACTX_m-3)]
+    poly_m_set_zero(&s_t2, 0, LACTX_N);
+    for (i = 0; i < LACTX_L; i++) {
         poly_add(&s_t2.vec[0], &s_t2.vec[0], &a[i]);
 
         poly_pointwise_montgomery(&z, &a_ntt[i], &a_ntt[i]);
@@ -250,7 +250,7 @@ int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES]
     poly_ntt(&x2_ntt);
 
     // z_i = x2rot(b_i, i) + a_i
-    for (i = 0; i < L; i++) {
+    for (i = 0; i < LACTX_L; i++) {
         if (b.coef[i] == 0) {
             poly_set(&coin->z[i], &a[i]);
         } else {
@@ -266,7 +266,7 @@ int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES]
     }
 
     // R_i = x2(x1*r + r1) + r2
-    for (j = 0; j < m - D; j++) {
+    for (j = 0; j < LACTX_m - D; j++) {
         poly_pointwise_montgomery(&coin->R[j], &s_u.vec[j + D], &x1_ntt);
         poly_inv_ntt_to_mont(&coin->R[j]);
         poly_reduce_exact(&coin->R[j]);
@@ -294,9 +294,9 @@ int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES]
     poly_n tmp1;
     poly_n coin_t22;
 
-    poly_m_set_zero(&s, 0, N);
-    for (i = 0; i < L; i++) {
-        poly_add(&s.vec[0], &s.vec[0], &coin->z[i]); // sum_{i=0}^{L-1} z_i sum z_i
+    poly_m_set_zero(&s, 0, LACTX_N);
+    for (i = 0; i < LACTX_L; i++) {
+        poly_add(&s.vec[0], &s.vec[0], &coin->z[i]); // sum_{i=0}^{LACTX_L-1} z_i sum z_i
 
         poly_easy_mul(&z, &x2, i, 1);
         poly_sub(&z, &coin->z[i],  &z); // (z_i - x2rot(1, i))
@@ -304,7 +304,7 @@ int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES]
         poly_set(&z_1, &coin->z[i]);
         poly_ntt(&z_1);
         poly_pointwise_montgomery(&z, &z, &z_1); // z_i(z_i - x2rot(1, i))
-        poly_add(&s.vec[1], &s.vec[1], &z); // sum_{i=0}^{L-1} z_i(z_i - x2rot(1, i))
+        poly_add(&s.vec[1], &s.vec[1], &z); // sum_{i=0}^{LACTX_L-1} z_i(z_i - x2rot(1, i))
     }
     poly_inv_ntt_to_mont(&s.vec[1]);
     poly_reduce_exact(&s.vec[1]);
@@ -324,7 +324,7 @@ int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES]
         goto rejection_point;
     }
 
-    for (j = 0; j < m - D; j++) {
+    for (j = 0; j < LACTX_m - D; j++) {
         poly_set(&s.vec[j + D], &coin->R[j]);
     }
 
@@ -377,20 +377,20 @@ int lactx_coin_create(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES]
  * @param v - coin amount
  * @return 1 if the v is the committed value, otherwise returns 0.
  */
-int lactx_coin_open(context_t *ctx, coin_t *coin, uint8_t mask[m - D][r_BYTES], uint64_t v) {
+int lactx_coin_open(context_t *ctx, coin_t *coin, uint8_t mask[LACTX_m - D][r_BYTES], uint64_t v) {
     poly_m s_u;
     poly_n u;
 
     // Minting Transactions
     if (coin->s != 0) {
-        poly_m_set_zero(&s_u, 0, N);
+        poly_m_set_zero(&s_u, 0, LACTX_N);
         binary_set(&s_u.vec[0], coin->s);
     }
     // Normal Transaction
     else {
         binary_set(&s_u.vec[0], v);
-        poly_set_zero(&s_u.vec[1], 0, N);
-        poly_set_zero(&s_u.vec[2], 0, N);
+        poly_set_zero(&s_u.vec[1], 0, LACTX_N);
+        poly_set_zero(&s_u.vec[2], 0, LACTX_N);
         set_masks_tau(&s_u, mask);  // ||r|| < TAU
         if (poly_m_chknorm(&s_u, GAMMA1)) return 0;
     }
@@ -431,13 +431,13 @@ int lactx_coin_verify(context_t *ctx, coin_t *coin) {
     poly_n tmp;
     poly_n tmp1;
 
-    for (i = 0; i < L; i++) {
+    for (i = 0; i < LACTX_L; i++) {
         if (poly_chknorm(&coin->z[i], ALPHA)) {
             DEBUG_PRINT(("failed z_(%d)\n", i));
             return 0;
         }
     }
-    for (j = 0; j < m - D; j++) {
+    for (j = 0; j < LACTX_m - D; j++) {
         if (poly_chknorm(&coin->R[j], TAU2)) {
             DEBUG_PRINT(("failed R_(%d)\n", j));
             return 0;
@@ -462,10 +462,10 @@ int lactx_coin_verify(context_t *ctx, coin_t *coin) {
     poly_set(&x2_ntt, &x2);
     poly_ntt(&x2_ntt);
 
-    // s = [x1 sum_{i=0}^{L-1} z_i, sum_{i=0}^{L-1} z_i(z_i - x2rot(1, i)), 0^N, R_0, .., R_(m-3)]
-    poly_m_set_zero(&s, 0, N);
-    for (i = 0; i < L; i++) {
-        poly_add(&s.vec[0], &s.vec[0], &coin->z[i]); // sum_{i=0}^{L-1} z_i sum z_i
+    // s = [x1 sum_{i=0}^{LACTX_L-1} z_i, sum_{i=0}^{LACTX_L-1} z_i(z_i - x2rot(1, i)), 0^LACTX_N, R_0, .., R_(LACTX_m-3)]
+    poly_m_set_zero(&s, 0, LACTX_N);
+    for (i = 0; i < LACTX_L; i++) {
+        poly_add(&s.vec[0], &s.vec[0], &coin->z[i]); // sum_{i=0}^{LACTX_L-1} z_i sum z_i
 
         poly_easy_mul(&z, &x2, i, 1);
         poly_sub(&z, &coin->z[i],  &z); // (z_i - x2rot(1, i))
@@ -473,7 +473,7 @@ int lactx_coin_verify(context_t *ctx, coin_t *coin) {
         poly_set(&z_1, &coin->z[i]);
         poly_ntt(&z_1);
         poly_pointwise_montgomery(&z, &z, &z_1); // z_i(z_i - x2rot(1, i))
-        poly_add(&s.vec[1], &s.vec[1], &z); // sum_{i=0}^{L-1} z_i(z_i - x2rot(1, i))
+        poly_add(&s.vec[1], &s.vec[1], &z); // sum_{i=0}^{LACTX_L-1} z_i(z_i - x2rot(1, i))
     }
     poly_inv_ntt_to_mont(&s.vec[1]);
     poly_reduce_exact(&s.vec[1]);
@@ -486,7 +486,7 @@ int lactx_coin_verify(context_t *ctx, coin_t *coin) {
     if (poly_chknorm(&s.vec[1], GAMMA1) != 0)
         return 0;
 
-    for (j = 0; j < m - D; j++) {
+    for (j = 0; j < LACTX_m - D; j++) {
         poly_set(&s.vec[j + D], &coin->R[j]);
     }
 

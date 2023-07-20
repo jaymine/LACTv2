@@ -41,7 +41,7 @@ extern "C" {
 static int test_mode_carrier = 0;
 
 typedef struct context_struct {
-    poly_m H[n];
+    poly_m H[LACTX_n];
     uint8_t seed[SEED_BYTES];
     poly one_N;
     uint8_t q[ORIGAMI_HASH_BYTES];
@@ -55,8 +55,8 @@ typedef struct coin_struct {
     poly_n u;
     poly_n t1;
     poly_n t2_hints;
-    poly z[L];
-    poly R[m - D];
+    poly z[LACTX_L];
+    poly R[LACTX_m - D];
     uint64_t s;
 } coin_t;
 
@@ -68,12 +68,12 @@ typedef struct header_struct {
     unsigned int in_len;
     unsigned int out_len;
     poly_n pk;
-    poly sigma[m - D];
+    poly sigma[LACTX_m - D];
     poly_n u;
     poly_n t1;
     poly *z0;
     poly *z1;
-    poly R[m - D];
+    poly R[LACTX_m - D];
     poly_n y_hints;
     poly_n t2_hints;
     uint8_t delta[ORIGAMI_HASH_BYTES];
@@ -98,7 +98,7 @@ typedef struct store_struct {
     poly_n u;
 } store_t;
 
-typedef uint8_t key[m - D][r_BYTES];
+typedef uint8_t key[LACTX_m - D][r_BYTES];
 
 # if !defined(LCTx_GNUC_PREREQ)
 #  if defined(__GNUC__) && defined(__GNUC_MINOR__)
@@ -186,14 +186,14 @@ LCTx_API void lactx_mint_coin_create(
 LCTx_API int lactx_coin_create (
         context_t *ctx,
         coin_t *coin,
-        uint8_t mask[m - 3][r_BYTES],
+        uint8_t mask[LACTX_m - 3][r_BYTES],
         uint64_t v
 ) LCTx_ARG_NONNULL(1) LCTx_ARG_NONNULL(2) LCTx_ARG_NONNULL(3);
 
 LCTx_API int lactx_coin_open (
         context_t *ctx,
         coin_t *coin,
-        uint8_t mask[m - 3][r_BYTES],
+        uint8_t mask[LACTX_m - 3][r_BYTES],
         uint64_t v
 ) LCTx_ARG_NONNULL(1) LCTx_ARG_NONNULL(2);
 
@@ -227,11 +227,11 @@ LCTx_API int lactx_header_create(
         header_t *header,
         unsigned int out_len,
         coin_t *out_coins,
-        uint8_t out_masks[][m - D][r_BYTES],
+        uint8_t out_masks[][LACTX_m - D][r_BYTES],
         uint64_t *v_out,
         unsigned int in_len,
         coin_t *in_coins,
-        uint8_t in_masks[][m - D][r_BYTES],
+        uint8_t in_masks[][LACTX_m - D][r_BYTES],
         uint64_t *v_in)
 LCTx_ARG_NONNULL(1) LCTx_ARG_NONNULL(2) LCTx_ARG_NONNULL(4)
 LCTx_ARG_NONNULL(5) LCTx_ARG_NONNULL(6) LCTx_ARG_NONNULL(8)
@@ -241,7 +241,7 @@ LCTx_API int lactx_minted_header_create(
         context_t *ctx,
         header_t *carrier,
         coin_t *out_coins,
-        uint8_t out_mask[m - 3][r_BYTES],
+        uint8_t out_mask[LACTX_m - 3][r_BYTES],
         uint64_t v_out,
         coin_t *in_coins,
         uint64_t coinbase)
@@ -303,7 +303,7 @@ LCTx_API void lactx_drop_store(
 LCTx_API void lactx_mint_tx_create(
         store_t *store,
         ctx_t *tx,
-        uint8_t mask[m - D][r_BYTES],
+        uint8_t mask[LACTX_m - D][r_BYTES],
         uint64_t s
 ) LCTx_ARG_NONNULL(1) LCTx_ARG_NONNULL(2) LCTx_ARG_NONNULL(3);
 

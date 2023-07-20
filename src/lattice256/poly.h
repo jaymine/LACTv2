@@ -24,15 +24,15 @@
 #include "ntt.h"
 
 typedef struct poly_struct {
-    int64_t coef[N];
+    int64_t coef[LACTX_N];
 } poly;
 
 typedef struct poly_n_struct {
-    poly vec[n];
+    poly vec[LACTX_n];
 } poly_n;
 
 typedef struct poly_m_struct {
-    poly vec[m];
+    poly vec[LACTX_m];
 } poly_m;
 
 int64_t reduce64(int64_t a);
@@ -43,7 +43,7 @@ int64_t highbits(int64_t a, unsigned int p);
 
 int64_t roundup(int64_t a, unsigned int p);
 
-poly poly_from_vec(const int64_t vec[N]);
+poly poly_from_vec(const int64_t vec[LACTX_N]);
 
 void poly_set(poly *b, poly *a);
 

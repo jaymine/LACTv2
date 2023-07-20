@@ -30,13 +30,13 @@
  */
 void poly_n_set(poly_n *b, poly_n *a) {
     unsigned int j;
-    for (j = 0; j < n; j++)
+    for (j = 0; j < LACTX_n; j++)
         poly_set(&b->vec[j], &a->vec[j]);
 }
 
 void poly_m_set(poly_m *b, poly_m *a) {
     unsigned int j;
-    for (j = 0; j < m; j++)
+    for (j = 0; j < LACTX_m; j++)
         poly_set(&b->vec[j], &a->vec[j]);
 }
 
@@ -46,7 +46,7 @@ void poly_m_set(poly_m *b, poly_m *a) {
  */
 void poly_n_reduce(poly_n *a) {
     unsigned int i;
-    for (i = 0; i < n; ++i) {
+    for (i = 0; i < LACTX_n; ++i) {
         poly_reduce(&a->vec[i]);
     }
 }
@@ -57,7 +57,7 @@ void poly_n_reduce(poly_n *a) {
  */
 void poly_m_reduce(poly_m *a) {
     unsigned int i;
-    for (i = 0; i < m; ++i) {
+    for (i = 0; i < LACTX_m; ++i) {
         poly_reduce(&a->vec[i]);
     }
 }
@@ -68,7 +68,7 @@ void poly_m_reduce(poly_m *a) {
  */
 void poly_n_reduce_exact(poly_n *a) {
     unsigned int i;
-    for (i = 0; i < n; ++i) {
+    for (i = 0; i < LACTX_n; ++i) {
         poly_reduce_exact(&a->vec[i]);
     }
 }
@@ -79,7 +79,7 @@ void poly_n_reduce_exact(poly_n *a) {
  */
 void poly_m_reduce_exact(poly_m *a) {
     unsigned int i;
-    for (i = 0; i < m; ++i) {
+    for (i = 0; i < LACTX_m; ++i) {
         poly_reduce_exact(&a->vec[i]);
     }
 }
@@ -92,7 +92,7 @@ void poly_m_reduce_exact(poly_m *a) {
  */
 int poly_n_compare(poly_n *s1, poly_n *s2) {
     unsigned int i;
-    for (i = 0; i < n; ++i) {
+    for (i = 0; i < LACTX_n; ++i) {
         if (poly_compare(&s1->vec[i], &s2->vec[i]) != 0)
             return -1;
     }
@@ -107,7 +107,7 @@ int poly_n_compare(poly_n *s1, poly_n *s2) {
  */
 int poly_m_compare(poly_m *s1, poly_m *s2) {
     unsigned int i;
-    for (i = 0; i < m; ++i) {
+    for (i = 0; i < LACTX_m; ++i) {
         if (poly_compare(&s1->vec[i], &s2->vec[i]) != 0)
             return -1;
     }
@@ -122,7 +122,7 @@ int poly_m_compare(poly_m *s1, poly_m *s2) {
  */
 void poly_n_set_zero(poly_n *a, unsigned int start, unsigned int end) {
     unsigned int i;
-    for (i = 0; i < n; ++i) {
+    for (i = 0; i < LACTX_n; ++i) {
         poly_set_zero(&a->vec[i], start, end);
     }
 }
@@ -135,7 +135,7 @@ void poly_n_set_zero(poly_n *a, unsigned int start, unsigned int end) {
  */
 void poly_m_set_zero(poly_m *a, unsigned int start, unsigned int end) {
     unsigned int i;
-    for (i = 0; i < m; ++i) {
+    for (i = 0; i < LACTX_m; ++i) {
         poly_set_zero(&a->vec[i], start, end);
     }
 }
@@ -148,7 +148,7 @@ void poly_m_set_zero(poly_m *a, unsigned int start, unsigned int end) {
  */
 void poly_n_add(poly_n *c, poly_n *a, poly_n *b) {
     unsigned int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < LACTX_n; i++) {
         poly_add(&c->vec[i], &a->vec[i], &b->vec[i]);
     }
 }
@@ -161,7 +161,7 @@ void poly_n_add(poly_n *c, poly_n *a, poly_n *b) {
  */
 void poly_m_add(poly_m *c, poly_m *a, poly_m *b) {
     unsigned int i;
-    for (i = 0; i < m; i++) {
+    for (i = 0; i < LACTX_m; i++) {
         poly_add(&c->vec[i], &a->vec[i], &b->vec[i]);
     }
 }
@@ -174,7 +174,7 @@ void poly_m_add(poly_m *c, poly_m *a, poly_m *b) {
  */
 void poly_n_sub(poly_n *c, poly_n *a, poly_n *b) {
     unsigned int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < LACTX_n; i++) {
         poly_sub(&c->vec[i], &a->vec[i], &b->vec[i]);
     }
 }
@@ -187,7 +187,7 @@ void poly_n_sub(poly_n *c, poly_n *a, poly_n *b) {
  */
 void poly_m_sub(poly_m *c, poly_m *a, poly_m *b) {
     unsigned int i;
-    for (i = 0; i < m; i++) {
+    for (i = 0; i < LACTX_m; i++) {
         poly_sub(&c->vec[i], &a->vec[i], &b->vec[i]);
     }
 }
@@ -199,7 +199,7 @@ void poly_m_sub(poly_m *c, poly_m *a, poly_m *b) {
  */
 void poly_n_highbits(poly_n *a, poly_n *b, unsigned int p) {
     unsigned int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < LACTX_n; i++) {
         poly_highbits(&a->vec[i], &b->vec[i], p);
     }
 }
@@ -212,7 +212,7 @@ void poly_n_highbits(poly_n *a, poly_n *b, unsigned int p) {
  */
 void poly_n_roundup(poly_n *a, poly_n *b, unsigned int p) {
     unsigned int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < LACTX_n; i++) {
         poly_roundup(&a->vec[i], &b->vec[i], p);
     }
 }
@@ -227,22 +227,22 @@ void poly_n_roundup(poly_n *a, poly_n *b, unsigned int p) {
  */
 int poly_n_hints(poly_n *hint, poly_n *a, poly_n *b) {
     unsigned int i, j, count = 0;
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < N; j++) {
+    for (i = 0; i < LACTX_n; i++) {
+        for (j = 0; j < LACTX_N; j++) {
             hint->vec[i].coef[j] = ((a->vec[i].coef[j] - b->vec[i].coef[j]));
             if (hint->vec[i].coef[j] == 1 || hint->vec[i].coef[j] == -1) {
-                //printf("%ld\n", a->vec[i].coef[j] - b->vec[i].coef[j]);
+                //printf("%ld\LACTX_n", a->vec[i].coef[j] - b->vec[i].coef[j]);
                 count++;
             }
             else if (hint->vec[i].coef[j] != 0) {
-                //printf("over one: %d %d %ld %ld %ld\n", i, j, a->vec[i].coef[j], b->vec[i].coef[j], hint->vec[i].coef[j]);
+                //printf("over one: %d %d %ld %ld %ld\LACTX_n", i, j, a->vec[i].coef[j], b->vec[i].coef[j], hint->vec[i].coef[j]);
                 return -1;
             }
         }
     }
-    //printf("gen count: %d\n", count);
+    //printf("gen count: %d\LACTX_n", count);
     if (count > CHI) { // Don't want to get an uninitiated value
-        //printf("rejected hints: %d\n", count);
+        //printf("rejected hints: %d\LACTX_n", count);
         return -1;
     }
     return 0;
@@ -256,22 +256,22 @@ int poly_n_hints(poly_n *hint, poly_n *a, poly_n *b) {
  */
 int poly_n_makeup(poly_n *a, poly_n *hint) {
     unsigned int i, j, count = 0;
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < N; j++) {
+    for (i = 0; i < LACTX_n; i++) {
+        for (j = 0; j < LACTX_N; j++) {
             if (hint->vec[i].coef[j] == 1 || hint->vec[i].coef[j] == -1) {
-                //printf("%ld\n", a->vec[i].coef[j] - b->vec[i].coef[j]);
+                //printf("%ld\LACTX_n", a->vec[i].coef[j] - b->vec[i].coef[j]);
                 a->vec[i].coef[j] -= hint->vec[i].coef[j];
                 count++;
             } else if (hint->vec[i].coef[j] != 0) {
-                //printf("over one: %ld\n", hint->vec[i].coef[j]);
+                //printf("over one: %ld\LACTX_n", hint->vec[i].coef[j]);
                 return -1;
             }
         }
     }
     //
-    // printf("ver count: %d\n", count);
+    // printf("ver count: %d\LACTX_n", count);
     if (count > CHI) { // Don't want to get an uninitiated value
-        //printf("rejected hints: %d\n", count);
+        //printf("rejected hints: %d\LACTX_n", count);
         return -1;
     }
     return 0;
@@ -283,7 +283,7 @@ int poly_n_makeup(poly_n *a, poly_n *hint) {
  */
 void poly_n_ntt(poly_n *a) {
     unsigned int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < LACTX_n; i++) {
         poly_ntt(&a->vec[i]);
     }
 }
@@ -294,7 +294,7 @@ void poly_n_ntt(poly_n *a) {
  */
 void poly_m_ntt(poly_m *a) {
     unsigned int i;
-    for (i = 0; i < m; i++) {
+    for (i = 0; i < LACTX_m; i++) {
         poly_ntt(&a->vec[i]);
     }
 }
@@ -305,7 +305,7 @@ void poly_m_ntt(poly_m *a) {
  */
 void poly_n_inv_ntt_to_mont(poly_n *a) {
     unsigned int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < LACTX_n; i++) {
         poly_inv_ntt_to_mont(&a->vec[i]);
     }
 }
@@ -316,7 +316,7 @@ void poly_n_inv_ntt_to_mont(poly_n *a) {
  */
 void poly_m_inv_ntt_to_mont(poly_m *a) {
     unsigned int i;
-    for (i = 0; i < m; i++) {
+    for (i = 0; i < LACTX_m; i++) {
         poly_inv_ntt_to_mont(&a->vec[i]);
     }
 }
@@ -327,7 +327,7 @@ void poly_m_inv_ntt_to_mont(poly_m *a) {
  */
 void poly_n_inv_ntt(poly_n *a) {
     unsigned int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < LACTX_n; i++) {
         poly_inv_ntt(&a->vec[i]);
     }
 }
@@ -338,7 +338,7 @@ void poly_n_inv_ntt(poly_n *a) {
  */
 void poly_m_inv_ntt(poly_m *a) {
     unsigned int i;
-    for (i = 0; i < m; i++) {
+    for (i = 0; i < LACTX_m; i++) {
         poly_inv_ntt(&a->vec[i]);
     }
 }
@@ -351,7 +351,7 @@ void poly_m_inv_ntt(poly_m *a) {
  */
 void poly_n_pointwise_montgomery(poly_n *c, poly_n *a, poly *b) {
     unsigned int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < LACTX_n; i++) {
         poly_pointwise_montgomery(&c->vec[i], &a->vec[i], b);
     }
 }
@@ -364,17 +364,17 @@ void poly_n_pointwise_montgomery(poly_n *c, poly_n *a, poly *b) {
  */
 void poly_m_pointwise_montgomery(poly_m *c, poly_m *a, poly *b) {
     unsigned int i;
-    for (i = 0; i < m; i++) {
+    for (i = 0; i < LACTX_m; i++) {
         poly_pointwise_montgomery(&c->vec[i], &a->vec[i], b);
     }
 }
 
 
-void poly_matrix_expand(poly_m mat[n], const uint8_t rho[SEED_BYTES]) {
+void poly_matrix_expand(poly_m mat[LACTX_n], const uint8_t rho[SEED_BYTES]) {
     unsigned int i, j;
 
-    for(i = 0; i < n; ++i)
-        for(j = 0; j < m; ++j)
+    for(i = 0; i < LACTX_n; ++i)
+        for(j = 0; j < LACTX_m; ++j)
             poly_uniform(&mat[i].vec[j], rho, (i << 8) + j);
 }
 
@@ -384,12 +384,12 @@ void poly_matrix_expand(poly_m mat[n], const uint8_t rho[SEED_BYTES]) {
  * @param H - input polynomial matrix (in NTT domain)
  * @param s - input polynomial vector (in NTT domain)
  */
-void poly_matrix_mul(poly_n *u, poly_m H[n], poly_m *s) {
+void poly_matrix_mul(poly_n *u, poly_m H[LACTX_n], poly_m *s) {
     unsigned int i, j;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < LACTX_n; i++) {
         poly t;
         poly_pointwise_montgomery(&u->vec[i], &H[i].vec[0], &s->vec[0]);
-        for(j = 1; j < m; ++j) {
+        for(j = 1; j < LACTX_m; ++j) {
             poly_pointwise_montgomery(&t, &H[i].vec[j], &s->vec[j]);
             poly_add(&u->vec[i], &u->vec[i], &t);
         }
@@ -404,7 +404,7 @@ void poly_matrix_mul(poly_n *u, poly_m H[n], poly_m *s) {
  */
 int poly_n_chknorm(const poly_n *a, int64_t B) {
     unsigned int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < LACTX_n; i++) {
         if (poly_chknorm(&a->vec[i], B) != 0)
             return -1;
     }
@@ -419,7 +419,7 @@ int poly_n_chknorm(const poly_n *a, int64_t B) {
  */
 int poly_m_chknorm(const poly_m *a, int64_t B) {
     unsigned int i;
-    for (i = 0; i < m; i++) {
+    for (i = 0; i < LACTX_m; i++) {
         if (poly_chknorm(&a->vec[i], B) != 0)
             return -1;
     }
@@ -432,9 +432,9 @@ int poly_m_chknorm(const poly_m *a, int64_t B) {
  * @param B - norm
  * @return 0 if B <= GAMMA2 and |a_i|_infinity < B; -1 otherwise
  */
-int poly_L_chknorm(const poly a[L], int64_t B) {
+int poly_L_chknorm(const poly a[LACTX_L], int64_t B) {
     unsigned int i;
-    for (i = 0; i < L; i++) {
+    for (i = 0; i < LACTX_L; i++) {
         if (poly_chknorm(&a[i], B) != 0)
             return -1;
     }
@@ -451,7 +451,7 @@ int poly_L_chknorm(const poly a[L], int64_t B) {
  */
 int poly_n_chknorm_custom(const poly_n *a, int64_t B, int start, int end) {
     unsigned int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < LACTX_n; i++) {
         if (poly_chknorm_custom(&a->vec[i], B, start, end) != 0)
             return -1;
     }
@@ -468,7 +468,7 @@ int poly_n_chknorm_custom(const poly_n *a, int64_t B, int start, int end) {
  */
 int poly_m_chknorm_custom(const poly_m *a, int64_t B, int start, int end) {
     unsigned int i;
-    for (i = 0; i < m; i++) {
+    for (i = 0; i < LACTX_m; i++) {
         if (poly_chknorm_custom(&a->vec[i], B, start, end) != 0)
             return -1;
     }
@@ -481,9 +481,9 @@ int poly_m_chknorm_custom(const poly_m *a, int64_t B, int start, int end) {
  * @param seed - random seed vector
  * @param b - value (binary)
  */
-void get_value_masks(poly a[L], uint8_t seed[L][a_BYTES], poly *b) {
+void get_value_masks(poly a[LACTX_L], uint8_t seed[LACTX_L][a_BYTES], poly *b) {
     unsigned int i;
-    for (i = 0; i < L; i++) {
+    for (i = 0; i < LACTX_L; i++) {
         get_value_mask(&a[i], seed[i], b->coef[i]);
     }
 }
@@ -493,9 +493,9 @@ void get_value_masks(poly a[L], uint8_t seed[L][a_BYTES], poly *b) {
  * @param a - polynomial vector
  * @param seed - random seed vector
  */
-void set_value_masks(poly a[L], const uint8_t seed[L][a_BYTES]) {
+void set_value_masks(poly a[LACTX_L], const uint8_t seed[LACTX_L][a_BYTES]) {
     unsigned int i;
-    for (i = 0; i < L; i++) {
+    for (i = 0; i < LACTX_L; i++) {
         set_value_mask(&a[i], seed[i]);
     }
 }
@@ -507,9 +507,9 @@ void set_value_masks(poly a[L], const uint8_t seed[L][a_BYTES]) {
  * @param b - value (binary)
  * @param bit_len - number of bits per coefficient
  */
-void get_custom_value_masks(poly a[L], uint8_t seed[L][a_BYTES], poly *b, int bit_len) {
+void get_custom_value_masks(poly a[LACTX_L], uint8_t seed[LACTX_L][a_BYTES], poly *b, int bit_len) {
     unsigned int i;
-    for (i = 0; i < L; i++) {
+    for (i = 0; i < LACTX_L; i++) {
         get_custom_value_mask(&a[i], seed[i], b->coef[i], bit_len);
     }
 }
@@ -520,9 +520,9 @@ void get_custom_value_masks(poly a[L], uint8_t seed[L][a_BYTES], poly *b, int bi
  * @param seed - random seed vector
  * @param bit_len - number of bits per coefficient
  */
-void set_custom_value_masks(poly a[L], const uint8_t seed[L][a_BYTES], int bit_len) {
+void set_custom_value_masks(poly a[LACTX_L], const uint8_t seed[LACTX_L][a_BYTES], int bit_len) {
     unsigned int i;
-    for (i = 0; i < L; i++) {
+    for (i = 0; i < LACTX_L; i++) {
         set_custom_value_mask(&a[i], seed[i], bit_len);
     }
 }
@@ -532,9 +532,9 @@ void set_custom_value_masks(poly a[L], const uint8_t seed[L][a_BYTES], int bit_l
  * @param a - polynomial vector
  * @param seed - random seed vector
  */
-void get_masks_tau(poly_m *a, uint8_t seed[m - D][r_BYTES]) {
+void get_masks_tau(poly_m *a, uint8_t seed[LACTX_m - D][r_BYTES]) {
     unsigned int i;
-    for (i = 0; i < m - D; i++) {
+    for (i = 0; i < LACTX_m - D; i++) {
         get_mask_tau(&a->vec[i + D], seed[i]);
     }
 }
@@ -544,9 +544,9 @@ void get_masks_tau(poly_m *a, uint8_t seed[m - D][r_BYTES]) {
  * @param a - polynomial vector
  * @param seed - random seed vector
  */
-void set_masks_tau(poly_m *a, const uint8_t seed[m - D][r_BYTES]) {
+void set_masks_tau(poly_m *a, const uint8_t seed[LACTX_m - D][r_BYTES]) {
     unsigned int i;
-    for (i = 0; i < m - D; i++) {
+    for (i = 0; i < LACTX_m - D; i++) {
         set_mask_tau(&a->vec[i + D], seed[i]);
     }
 }
@@ -556,9 +556,9 @@ void set_masks_tau(poly_m *a, const uint8_t seed[m - D][r_BYTES]) {
  * @param a - polynomial vector
  * @param seed - random seed vector
  */
-void get_masks_tau1(poly_m *a, uint8_t seed[m - D][r1_BYTES]) {
+void get_masks_tau1(poly_m *a, uint8_t seed[LACTX_m - D][r1_BYTES]) {
     unsigned int i;
-    for (i = 0; i < m - D; i++) {
+    for (i = 0; i < LACTX_m - D; i++) {
         get_mask_tau1(&a->vec[i + D], seed[i]);
     }
 }
@@ -568,9 +568,9 @@ void get_masks_tau1(poly_m *a, uint8_t seed[m - D][r1_BYTES]) {
  * @param a - polynomial vector
  * @param seed - random seed vector
  */
-void set_masks_tau1(poly_m *a, const uint8_t seed[m - D][r1_BYTES]) {
+void set_masks_tau1(poly_m *a, const uint8_t seed[LACTX_m - D][r1_BYTES]) {
     unsigned int i;
-    for (i = 0; i < m - D; i++) {
+    for (i = 0; i < LACTX_m - D; i++) {
         set_mask_tau1(&a->vec[i + D], seed[i]);
     }
 }
@@ -580,9 +580,9 @@ void set_masks_tau1(poly_m *a, const uint8_t seed[m - D][r1_BYTES]) {
  * @param a - polynomial vector
  * @param seed - random seed vector
  */
-void get_masks_tau2(poly_m *a, uint8_t seed[m - D][r2_BYTES]) {
+void get_masks_tau2(poly_m *a, uint8_t seed[LACTX_m - D][r2_BYTES]) {
     unsigned int i;
-    for (i = 0; i < m - D; i++) {
+    for (i = 0; i < LACTX_m - D; i++) {
         get_mask_tau2(&a->vec[i + D], seed[i]);
     }
 }
@@ -592,9 +592,9 @@ void get_masks_tau2(poly_m *a, uint8_t seed[m - D][r2_BYTES]) {
  * @param a - polynomial vector
  * @param seed - random seed vector
  */
-void set_masks_tau2(poly_m *a, const uint8_t seed[m - D][r2_BYTES]) {
+void set_masks_tau2(poly_m *a, const uint8_t seed[LACTX_m - D][r2_BYTES]) {
     unsigned int i;
-    for (i = 0; i < m - D; i++) {
+    for (i = 0; i < LACTX_m - D; i++) {
         set_mask_tau2(&a->vec[i + D], seed[i]);
     }
 }

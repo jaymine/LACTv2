@@ -60,12 +60,12 @@ void poly_m_inv_ntt(poly_m *a);
 void poly_n_pointwise_montgomery(poly_n *c, poly_n *a, poly *b);
 void poly_m_pointwise_montgomery(poly_m *c, poly_m *a, poly *b);
 
-void poly_matrix_mul(poly_n *u, poly_m H[n], poly_m *s);
-void poly_matrix_expand(poly_m mat[n], const uint8_t rho[SEED_BYTES]);
+void poly_matrix_mul(poly_n *u, poly_m H[LACTX_n], poly_m *s);
+void poly_matrix_expand(poly_m mat[LACTX_n], const uint8_t rho[SEED_BYTES]);
 
 int poly_n_chknorm(const poly_n *a, int64_t B);
 int poly_m_chknorm(const poly_m *a, int64_t B);
-int poly_L_chknorm(const poly a[L], int64_t B);
+int poly_L_chknorm(const poly a[LACTX_L], int64_t B);
 
 void poly_n_highbits(poly_n *a, poly_n *b, unsigned int p);
 void poly_n_roundup(poly_n *a, poly_n *b, unsigned int p);
@@ -75,25 +75,25 @@ int poly_n_makeup(poly_n *b, poly_n *hint);
 int poly_n_chknorm_custom(const poly_n *a, int64_t B, int start, int end);
 int poly_m_chknorm_custom(const poly_m *a, int64_t B, int start, int end);
 
-void get_value_masks(poly a[L], uint8_t seed[L][a_BYTES], poly *b);
+void get_value_masks(poly a[LACTX_L], uint8_t seed[LACTX_L][a_BYTES], poly *b);
 
-void set_value_masks(poly a[L], const uint8_t seed[L][a_BYTES]);
+void set_value_masks(poly a[LACTX_L], const uint8_t seed[LACTX_L][a_BYTES]);
 
-void get_custom_value_masks(poly a[L], uint8_t seed[L][a_BYTES], poly *b, int bit_len);
+void get_custom_value_masks(poly a[LACTX_L], uint8_t seed[LACTX_L][a_BYTES], poly *b, int bit_len);
 
-void set_custom_value_masks(poly a[L], const uint8_t seed[L][a_BYTES], int bit_len);
+void set_custom_value_masks(poly a[LACTX_L], const uint8_t seed[LACTX_L][a_BYTES], int bit_len);
 
-void get_masks_tau(poly_m *a, uint8_t seed[m - 3][r_BYTES]);
+void get_masks_tau(poly_m *a, uint8_t seed[LACTX_m - 3][r_BYTES]);
 
-void get_masks_tau1(poly_m *a, uint8_t seed[m - 3][r1_BYTES]);
+void get_masks_tau1(poly_m *a, uint8_t seed[LACTX_m - 3][r1_BYTES]);
 
-void get_masks_tau2(poly_m *a, uint8_t seed[m - 3][r2_BYTES]);
+void get_masks_tau2(poly_m *a, uint8_t seed[LACTX_m - 3][r2_BYTES]);
 
-void set_masks_tau(poly_m *a, const uint8_t seed[m - 3][r_BYTES]);
+void set_masks_tau(poly_m *a, const uint8_t seed[LACTX_m - 3][r_BYTES]);
 
-void set_masks_tau1(poly_m *a, const uint8_t seed[m - 3][r1_BYTES]);
+void set_masks_tau1(poly_m *a, const uint8_t seed[LACTX_m - 3][r1_BYTES]);
 
-void set_masks_tau2(poly_m *a, const uint8_t seed[m - 3][r2_BYTES]);
+void set_masks_tau2(poly_m *a, const uint8_t seed[LACTX_m - 3][r2_BYTES]);
 
 
 #endif //LACTX_POLYVEC_H

@@ -24,9 +24,9 @@
 #include <openssl/rand.h>
 #include "random.h"
 
-#define PERIOD (N/8)
+#define PERIOD (LACTX_N/8)
 /**
- * Get random mask in [-2^bound_bytes - 1, -2^bound_bytes - 1] for coefficients a[0:N].
+ * Get random mask in [-2^bound_bytes - 1, -2^bound_bytes - 1] for coefficients a[0:LACTX_N].
  * @param a - output polynomial
  * @param seed - output random seed (must be allocated)
  * @param bound_bytes - input
@@ -36,7 +36,7 @@ void get_mask(poly *a, uint8_t *seed, int bound_bytes) {
     memset(seed, 0x0, PERIOD * (bound_bytes + 1));
     RAND_bytes(seed, PERIOD * (bound_bytes + 1));
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < LACTX_N; i++) {
         // used ‘‘truncation toward zero’’.
         byte = i / 8;
         bit = i % 8;
@@ -54,7 +54,7 @@ void get_mask(poly *a, uint8_t *seed, int bound_bytes) {
 }
 
 /**
- * Set polynomial from the given seed in [-2^bound_bytes - 1, -2^bound_bytes - 1] for coefficients a[0:N].
+ * Set polynomial from the given seed in [-2^bound_bytes - 1, -2^bound_bytes - 1] for coefficients a[0:LACTX_N].
  * @param a - output polynomial
  * @param seed - input random seed (must be allocated)
  * @param bound_bytes - input
@@ -62,7 +62,7 @@ void get_mask(poly *a, uint8_t *seed, int bound_bytes) {
 void set_mask(poly *a, const uint8_t *seed, int bound_bytes) {
     int i, j, byte, bit, sign;
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < LACTX_N; i++) {
         // used ‘‘truncation toward zero’’.
         byte = i / 8;
         bit = i % 8;
@@ -80,7 +80,7 @@ void set_mask(poly *a, const uint8_t *seed, int bound_bytes) {
 }
 
 /**
- * Get random mask in (-TAU, TAU) or [-TAU + 1, TAU - 1] for polynomial[2, m].
+ * Get random mask in (-TAU, TAU) or [-TAU + 1, TAU - 1] for polynomial[2, LACTX_m].
  * Coefficients in polynomial [0: 2] are left unchanged.
  * @param a - output polynomial
  * @param seed - output random seed
@@ -90,7 +90,7 @@ void get_mask_tau(poly *a, uint8_t seed[r_BYTES]) {
 }
 
 /**
- * Get random mask in (-TAU1, TAU1) or [-TAU1 + 1, TAU1 - 1]  for polynomial[2, m].
+ * Get random mask in (-TAU1, TAU1) or [-TAU1 + 1, TAU1 - 1]  for polynomial[2, LACTX_m].
  * Coefficients in polynomial [0: 2] are left unchanged.
  * @param a - output polynomial
  * @param seed - output random seed
@@ -100,7 +100,7 @@ void get_mask_tau1(poly *a, uint8_t seed[r1_BYTES]) {
 }
 
 /**
- * Get random mask in (-TAU2, TAU2) or [-TAU2 + 1, TAU2 - 1]  for polynomial[2, m].
+ * Get random mask in (-TAU2, TAU2) or [-TAU2 + 1, TAU2 - 1]  for polynomial[2, LACTX_m].
  * Coefficients in polynomial [0: 2] are left unchanged.
  * @param a - output polynomial
  * @param seed - output random seed
@@ -110,7 +110,7 @@ void get_mask_tau2(poly *a, uint8_t seed[r2_BYTES]) {
 }
 
 /**
- * Get random mask in (-TAU3, TAU3) or [-TAU3 + 1, TAU3 - 1]  for polynomial[2, m].
+ * Get random mask in (-TAU3, TAU3) or [-TAU3 + 1, TAU3 - 1]  for polynomial[2, LACTX_m].
  * Coefficients in polynomial [0: 2] are left unchanged.
  * @param a - output polynomial
  * @param seed - output random seed
@@ -120,7 +120,7 @@ void get_mask_tau3(poly *a, uint8_t seed[r3_BYTES]) {
 }
 
 /**
- * Set polynomial from the given seed in (-TAU, TAU) or [-TAU + 1, TAU - 1]  for polynomial[2, m].
+ * Set polynomial from the given seed in (-TAU, TAU) or [-TAU + 1, TAU - 1]  for polynomial[2, LACTX_m].
  * Coefficients in [0:2] are left unchanged.
  * @param a - output polynomial
  * @param seed - input random seed
@@ -130,7 +130,7 @@ void set_mask_tau(poly *a, const uint8_t seed[r_BYTES]) {
 }
 
 /**
- * Set polynomial from the given seed in (-TAU1, TAU1) or [-TAU1 + 1, TAU1 - 1] for polynomial[2, m].
+ * Set polynomial from the given seed in (-TAU1, TAU1) or [-TAU1 + 1, TAU1 - 1] for polynomial[2, LACTX_m].
  * Coefficients in polynomial [0: 2] are left unchanged.
  * @param a - output polynomial
  * @param seed - input random seed
@@ -140,7 +140,7 @@ void set_mask_tau1(poly *a, const uint8_t seed[r1_BYTES]) {
 }
 
 /**
- * Set polynomial from the given seed in (-TAU2, TAU2) or [-TAU2 + 1, TAU2 - 1] for polynomial[2, m].
+ * Set polynomial from the given seed in (-TAU2, TAU2) or [-TAU2 + 1, TAU2 - 1] for polynomial[2, LACTX_m].
  * Coefficients in polynomial [0: 2] are left unchanged.
  * @param a - output polynomial
  * @param seed - input random seed
@@ -150,7 +150,7 @@ void set_mask_tau2(poly *a, const uint8_t seed[r2_BYTES]) {
 }
 
 /**
- * Set polynomial from the given seed in (-TAU3, TAU3) or [-TAU3 + 1, TAU3 - 1] for polynomial[2, m].
+ * Set polynomial from the given seed in (-TAU3, TAU3) or [-TAU3 + 1, TAU3 - 1] for polynomial[2, LACTX_m].
  * Coefficients in polynomial [0: 2] are left unchanged.
  * @param a - output polynomial
  * @param seed - input random seed
@@ -160,7 +160,7 @@ void set_mask_tau3(poly *a, const uint8_t seed[r3_BYTES]) {
 }
 
 /**
- * Get random mask in (-ALPHA, ALPHA) or [-ALPHA + 1, ALPHA -1] for L polynomials.
+ * Get random mask in (-ALPHA, ALPHA) or [-ALPHA + 1, ALPHA -1] for LACTX_L polynomials.
  * @param a - output polynomial
  * @param seed - output random seed
  * @param b - value bit
@@ -173,7 +173,7 @@ void get_value_mask(poly *a, uint8_t seed[a_BYTES], int64_t b) {
     uint64_t coef;
 
     if (b == 0) {
-        for (i = 0; i < N; i++) {
+        for (i = 0; i < LACTX_N; i++) {
             // used ‘‘truncation toward zero’’.
             byte = i / 8;
             bit = i % 8;
@@ -187,13 +187,13 @@ void get_value_mask(poly *a, uint8_t seed[a_BYTES], int64_t b) {
                 coef += (((seed[PERIOD*(j+1) + byte] >> bit) & 1) << j);
             }
             if (coef >= ALPHA - 1) {
-                //printf("breaker %d %d\n", breaker, (seed[byte] >> bit) & 1);
+                //printf("breaker %d %d\LACTX_n", breaker, (seed[byte] >> bit) & 1);
                 seed[PERIOD + byte] &= ~(1 << bit);
             }
         }
     }
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < LACTX_N; i++) {
         // used ‘‘truncation toward zero’’.
         byte = i / 8;
         bit = i % 8;
@@ -211,14 +211,14 @@ void get_value_mask(poly *a, uint8_t seed[a_BYTES], int64_t b) {
 }
 
 /**
- * Set random mask from the given seed in (-ALPHA, ALPHA) or [-ALPHA + 1, ALPHA -1]  for L polynomials.
+ * Set random mask from the given seed in (-ALPHA, ALPHA) or [-ALPHA + 1, ALPHA -1]  for LACTX_L polynomials.
  * @param a - output polynomial
  * @param seed - output random seed
  */
 void set_value_mask(poly *a, const uint8_t seed[a_BYTES]) {
     int i, j, byte, bit, sign;
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < LACTX_N; i++) {
         // used ‘‘truncation toward zero’’.
         byte = i / 8;
         bit = i % 8;
@@ -236,7 +236,7 @@ void set_value_mask(poly *a, const uint8_t seed[a_BYTES]) {
 }
 
 /**
- * Get random mask in (-ALPHA, ALPHA) or [-ALPHA + 1, ALPHA -1] for L polynomials.
+ * Get random mask in (-ALPHA, ALPHA) or [-ALPHA + 1, ALPHA -1] for LACTX_L polynomials.
  * @param a - output polynomial
  * @param seed - output random seed
  * @param b - value bit
@@ -245,14 +245,14 @@ void set_value_mask(poly *a, const uint8_t seed[a_BYTES]) {
 void get_custom_value_mask(poly *a, uint8_t *seed, int64_t b, int bit_len) {
     int i, j, byte, bit, sign;
     int bytes = 1 << (bit_len);
-    int total_bytes = (N/8 * (bit_len + 1));
+    int total_bytes = (LACTX_N / 8 * (bit_len + 1));
     memset(seed, 0x0, total_bytes);
     RAND_bytes(seed, PERIOD * (bit_len + 1));
 
     uint64_t coef;
 
     if (b == 0) {
-        for (i = 0; i < N; i++) {
+        for (i = 0; i < LACTX_N; i++) {
             // used ‘‘truncation toward zero’’.
             byte = i / 8;
             bit = i % 8;
@@ -266,13 +266,13 @@ void get_custom_value_mask(poly *a, uint8_t *seed, int64_t b, int bit_len) {
                 coef += (((seed[PERIOD*(j+1) + byte] >> bit) & 1) << j);
             }
             if (coef >= bytes - 1) {
-                //printf("breaker %d %d\n", breaker, (seed[byte] >> bit) & 1);
+                //printf("breaker %d %d\LACTX_n", breaker, (seed[byte] >> bit) & 1);
                 seed[PERIOD + byte] &= ~(1 << bit);
             }
         }
     }
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < LACTX_N; i++) {
         // used ‘‘truncation toward zero’’.
         byte = i / 8;
         bit = i % 8;
@@ -290,7 +290,7 @@ void get_custom_value_mask(poly *a, uint8_t *seed, int64_t b, int bit_len) {
 }
 
 /**
- * Set random mask from the given seed in (-ALPHA, ALPHA) or [-ALPHA + 1, ALPHA -1]  for L polynomials.
+ * Set random mask from the given seed in (-ALPHA, ALPHA) or [-ALPHA + 1, ALPHA -1]  for LACTX_L polynomials.
  * @param a - output polynomial
  * @param seed - output random seed
  * @param bit_len - number of coefficient bits
@@ -298,7 +298,7 @@ void get_custom_value_mask(poly *a, uint8_t *seed, int64_t b, int bit_len) {
 void set_custom_value_mask(poly *a, const uint8_t *seed, int bit_len) {
     int i, j, byte, bit, sign;
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < LACTX_N; i++) {
         // used ‘‘truncation toward zero’’.
         byte = i / 8;
         bit = i % 8;

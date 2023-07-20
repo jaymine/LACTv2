@@ -37,7 +37,7 @@ typedef struct {
 
 
 #ifdef DETERMINISTIC
-#define SQLITE3_FAILURE(msg, error, db) do { \
+#define SQLITE3_FAILURE(msg, error, db) do ${LATTICE_SOURCES} { \
     fprintf(stderr, "%s\n %s\n", msg, error); \
     sqlite3_free(error); \
     sqlite3_close(db); \

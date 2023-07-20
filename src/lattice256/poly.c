@@ -35,24 +35,24 @@
 int64_t reduce64(const int64_t a) {
     int64_t t;
     t = (a + ((int64_t)1 << K11)) >> K1;
-    t = a - t*Q; // bring t to [-2^50, 2^50]
+    t = a - t * LACTX_Q; // bring t to [-2^50, 2^50]
 
     return t;
 }
 
 /**
- * Reduce 64bit number to the range [-(Q-1)/2, (Q-1)/2]
+ * Reduce 64bit number to the range [-(LACTX_Q-1)/2, (LACTX_Q-1)/2]
  *
  * @param a - the number
- * @return a number in [-(Q-1)/2, (Q-1)/2]
+ * @return a number in [-(LACTX_Q-1)/2, (LACTX_Q-1)/2]
  */
 int64_t reduce64_exact(int64_t a) {
     int64_t t;
     t = (a + ((int64_t)1 << K11)) >> K1;
-    t = a - t*Q; // bring t to [-2^50, 2^50]
+    t = a - t * LACTX_Q; // bring t to [-2^50, 2^50]
 
-    if (t > Q2) t = -Q + t;
-    if (t < -Q2) t = Q + t;
+    if (t > Q2) t = -LACTX_Q + t;
+    if (t < -Q2) t = LACTX_Q + t;
 
     return t;
 }
@@ -67,7 +67,7 @@ int64_t reduce64_exact(int64_t a) {
 
 int64_t highbits(int64_t a, unsigned int p) {
     //int64_t t =  ((((int64_t)(a & (((int64_t)1) << (p - 1)) - 1)) << (64 - K11))>> (p + 64 - K11));
-    if (a == (Q - 1) >> 1) a = 0;
+    if (a == (LACTX_Q - 1) >> 1) a = 0;
     int64_t t =  (a & ((((int64_t) 1 << (K1 - p)) - 1) << (p - 1))) >> p;
     return t;
 }
@@ -87,10 +87,10 @@ int64_t roundup(int64_t a, unsigned int p) {
  * @param vec - input
  * @return a polynomial
  */
-poly poly_from_vec(const int64_t vec[N]) {
+poly poly_from_vec(const int64_t vec[LACTX_N]) {
     int i;
     poly a;
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < LACTX_N; i++) {
         a.coef[i] = vec[i];
     }
     return a;
@@ -103,7 +103,7 @@ poly poly_from_vec(const int64_t vec[N]) {
  */
 void poly_set(poly *b, poly *a) {
     unsigned int j;
-    for (j = 0; j < N; j++)
+    for (j = 0; j < LACTX_N; j++)
         b->coef[j] = a->coef[j];
 }
 
@@ -114,10 +114,10 @@ void poly_set(poly *b, poly *a) {
  * @return 0 - equal and -1 - otherwise
  */
 int poly_compare(const poly *s1, const poly *s2) {
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < LACTX_N; i++) {
         if (s1->coef[i] != s2->coef[i]){
 #if defined(ENABLE_DEBUG_MODE)
-            printf("%d %ld %ld\n", i, s1->coef[i], s2->coef[i]);
+            printf("%d %ld %ld\LACTX_n", i, s1->coef[i], s2->coef[i]);
 #endif
             return -1;
         }
@@ -132,10 +132,10 @@ int poly_compare(const poly *s1, const poly *s2) {
  * @param p - the number of lower bits
  */
 int poly_highbits_compare(const poly *s1, const poly *s2, unsigned int p) {
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < LACTX_N; i++) {
         if (highbits(s1->coef[i], p) != highbits(s2->coef[i], p)){
 #if defined(ENABLE_DEBUG_MODE)
-            printf("%d %ld %ld\n", i, (s1->coef[i] & filter), (s2->coef[i] & filter));
+            printf("%d %ld %ld\LACTX_n", i, (s1->coef[i] & filter), (s2->coef[i] & filter));
 #endif
             return -1;
         }
@@ -158,12 +158,12 @@ void poly_set_zero(poly *a, unsigned int start, unsigned int end) {
 }
 
 /**
- * Change range to [0, Q-1]
+ * Change range to [0, LACTX_Q-1]
  * @param a
  * @return
  */
 static int64_t addq(int64_t a) {
-    a += (a >> 31) & Q;
+    a += (a >> 31) & LACTX_Q;
     return a;
 }
 
@@ -173,18 +173,18 @@ static int64_t addq(int64_t a) {
  */
 void poly_reduce(poly *a) {
     unsigned int i;
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < LACTX_N; i++) {
         a->coef[i] = reduce64(a->coef[i]);
     }
 }
 
 /**
- * Reduce all coefficients of a polynomial to [-Q, Q]
+ * Reduce all coefficients of a polynomial to [-LACTX_Q, LACTX_Q]
  * @param a - the polynomial
  */
 void poly_reduce_exact(poly *a) {
     unsigned int i;
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < LACTX_N; i++) {
         a->coef[i] = reduce64_exact(a->coef[i]);
     }
 }
@@ -197,7 +197,7 @@ void poly_reduce_exact(poly *a) {
  */
 void poly_highbits(poly *a, poly *b, unsigned int p) {
     unsigned int i;
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < LACTX_N; i++) {
         a->coef[i] = highbits(b->coef[i], p);
     }
 }
@@ -210,18 +210,18 @@ void poly_highbits(poly *a, poly *b, unsigned int p) {
  */
 void poly_roundup(poly *a, poly *b, unsigned int p) {
     unsigned int i;
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < LACTX_N; i++) {
         a->coef[i] = roundup(b->coef[i], p);
     }
 }
 
 /**
- * Change coefficient range of a polynomial to [0, Q-1]
+ * Change coefficient range of a polynomial to [0, LACTX_Q-1]
  * @param a
  */
 void poly_addq(poly *a) {
     unsigned int i;
-    for (i = 0; i < N; ++i)
+    for (i = 0; i < LACTX_N; ++i)
         a->coef[i] = addq(a->coef[i]);
 }
 
@@ -233,7 +233,7 @@ void poly_addq(poly *a) {
  */
 void poly_add(poly *c, poly *a, poly *b) {
     unsigned int i;
-    for (i = 0; i < N; ++i)
+    for (i = 0; i < LACTX_N; ++i)
         c->coef[i] = a->coef[i] + b->coef[i];
 }
 
@@ -245,7 +245,7 @@ void poly_add(poly *c, poly *a, poly *b) {
  */
 void poly_sub(poly *c, poly *a, poly *b) {
     unsigned int i;
-    for (i = 0; i < N; ++i)
+    for (i = 0; i < LACTX_N; ++i)
         c->coef[i] = a->coef[i] - b->coef[i];
 }
 
@@ -255,7 +255,7 @@ void poly_sub(poly *c, poly *a, poly *b) {
  */
 void poly_shift_l(poly *a, unsigned int l) {
     unsigned int i;
-    for (i = 0; i < N; ++i)
+    for (i = 0; i < LACTX_N; ++i)
         a->coef[i] <<= l;
 }
 
@@ -293,13 +293,13 @@ void poly_inv_ntt(poly *a) {
 void poly_pointwise_montgomery(poly *c, poly *a, poly *b) {
     unsigned int i;
 
-    for(i = 0; i < N; i++)
+    for(i = 0; i < LACTX_N; i++)
         c->coef[i] = montgomery_reduce((__int128)a->coef[i] * b->coef[i]);
 
 }
 
 /**
- * c = a * b in Z[X]/[X^N + 1] where b.coef[i] = value and all other coefficients are zero.
+ * c = a * b in Z[X]/[X^LACTX_N + 1] where b.coef[i] = value and all other coefficients are zero.
  * @param c - output
  * @param a - input
  * @param i - index
@@ -308,11 +308,11 @@ void poly_pointwise_montgomery(poly *c, poly *a, poly *b) {
 void poly_easy_mul(poly *c, poly *a, unsigned int i, int value) {
     unsigned int j;
     poly tmp; // Should not directly set c because a can be the same pointer as c.
-    for (j = 0; j < (N - i); j++) {
+    for (j = 0; j < (LACTX_N - i); j++) {
         tmp.coef[j + i] = value * a->coef[j];
     }
-    for (j = (N - i); j < N; j++) {
-        tmp.coef[j - N + i] = -(value * a->coef[j]);
+    for (j = (LACTX_N - i); j < LACTX_N; j++) {
+        tmp.coef[j - LACTX_N + i] = -(value * a->coef[j]);
     }
     poly_set(c, &tmp);
 }
@@ -330,13 +330,13 @@ int poly_chknorm(const poly *a, int64_t B) {
     if (B > GAMMA2)
         return -1;
 
-    for (i = 0; i < N; ++i) {
+    for (i = 0; i < LACTX_N; ++i) {
         // Absolute value
         t = a->coef[i] >> 63;
         t = a->coef[i] - (t & 2 * a->coef[i]);
 
         if (t >= B) {
-            //printf("%ld\n", a->coef[i]);
+            //printf("%ld\LACTX_n", a->coef[i]);
             return -1;
         }
     }
@@ -357,7 +357,7 @@ int poly_chknorm_custom(const poly *a, int64_t B, int start, int end) {
     unsigned int i;
     int64_t t;
 
-    if (B > GAMMA2 || start < 0 || end > N)
+    if (B > GAMMA2 || start < 0 || end > LACTX_N)
         return -1;
 
     for (i = start; i < end; ++i) {
@@ -394,9 +394,9 @@ void poly_challenge(poly *x, const uint8_t seed[SEED_BYTES]) {
         signs |= (int64_t)buf[i] << 8*i;
     pos = 8;
 
-    for(i = 0; i < N; ++i)
+    for(i = 0; i < LACTX_N; ++i)
         x->coef[i] = 0;
-    for(i = N - BETA; i < N; ++i) {
+    for(i = LACTX_N - BETA; i < LACTX_N; ++i) {
         do {
             if(pos >= SHAKE256_RATE) {
                 shake256_squeezeblocks(buf, 1, &state);

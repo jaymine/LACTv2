@@ -163,10 +163,10 @@ void lactx_ucoin_add(store_t *store, coin_t *coin) {
     // t2_hints
     pack_poly_ring_custom(t2_hint_bytes, &coin->t2_hints, HINTBITS);
     sqlite3_bind_blob(stmt, 4, t2_hint_bytes, HINTBYTES, SQLITE_STATIC);
-    // z[L]
+    // z[LACTX_L]
     pack_poly_z(zl_bytes, coin->z);
     sqlite3_bind_blob(stmt, 5, zl_bytes, z_BYTES, SQLITE_STATIC);
-    // R[m - 3]
+    // R[LACTX_m - 3]
     pack_poly_m_R(R_bytes, coin->R);
     sqlite3_bind_blob(stmt, 6, R_bytes, R_BYTES, SQLITE_STATIC);
 
@@ -231,8 +231,8 @@ void lactx_header_add(store_t *store, header_t *carrier) {
     unsigned int out_carries = get_carry_range(carrier->out_len);
     int in_carry_bits = ALPHA_BITS + ceil(log2(carrier->in_len - 1)/2);
     int out_carry_bits = ALPHA_BITS + ceil(log2(carrier->out_len - 1)/2);
-    int z0l_byte_len = (L*N*(in_carry_bits + 1))/8;
-    int z1l_byte_len = (L*N*(out_carry_bits + 1))/8;
+    int z0l_byte_len = (LACTX_L * LACTX_N * (in_carry_bits + 1)) / 8;
+    int z1l_byte_len = (LACTX_L * LACTX_N * (out_carry_bits + 1)) / 8;
 
     uint8_t pk_bytes[pk_HIGHBITS];
     uint8_t sig_bytes[sig_BYTES];
@@ -299,17 +299,17 @@ void lactx_header_add(store_t *store, header_t *carrier) {
         // t1
         pack_poly_ring_custom(t1_bytes, &carrier->t1, K1 - t1_ERROR);
         sqlite3_bind_blob(stmt, 8, t1_bytes, t1_HIGHBITS, SQLITE_STATIC);
-        // z0[L]
+        // z0[LACTX_L]
         for (l = 0; l < in_carries; l++) {
-            pack_poly_z_custom(z0l_bytes + z0l_byte_len*l, carrier->z0 + L*l, in_carry_bits);
+            pack_poly_z_custom(z0l_bytes + z0l_byte_len*l, carrier->z0 + LACTX_L * l, in_carry_bits);
         }
         sqlite3_bind_blob(stmt, 9, z0l_bytes, z0l_byte_len*in_carries, SQLITE_STATIC);
-        // z1[L]
+        // z1[LACTX_L]
         for (l = 0; l < out_carries; l++) {
-            pack_poly_z_custom(z1l_bytes + z1l_byte_len*l, carrier->z1 + L*l, out_carry_bits);
+            pack_poly_z_custom(z1l_bytes + z1l_byte_len*l, carrier->z1 + LACTX_L * l, out_carry_bits);
         }
         sqlite3_bind_blob(stmt, 10, z1l_bytes, z1l_byte_len*out_carries, SQLITE_STATIC);
-        // R[m - 3]
+        // R[LACTX_m - 3]
         pack_poly_m_R(R_bytes, carrier->R);
         sqlite3_bind_blob(stmt, 11, R_bytes, R_BYTES, SQLITE_STATIC);
         // v_in
@@ -345,13 +345,13 @@ void lactx_header_add(store_t *store, header_t *carrier) {
         // t1
         pack_poly_ring_custom(t1_bytes, &carrier->t1, K1 - t1_ERROR);
         sqlite3_bind_blob(stmt, 8, t1_bytes, t1_HIGHBITS, SQLITE_STATIC);
-        // no z0[L]
-        // z1[L]
+        // no z0[LACTX_L]
+        // z1[LACTX_L]
         for (l = 0; l < out_carries; l++) {
-            pack_poly_z_custom(z1l_bytes+ z1l_byte_len*l, carrier->z1 + L*l, out_carry_bits);
+            pack_poly_z_custom(z1l_bytes+ z1l_byte_len*l, carrier->z1 + LACTX_L * l, out_carry_bits);
         }
         sqlite3_bind_blob(stmt, 10, z1l_bytes, z1l_byte_len*out_carries, SQLITE_STATIC);
-        // R[m - 3]
+        // R[LACTX_m - 3]
         pack_poly_m_R(R_bytes, carrier->R);
         sqlite3_bind_blob(stmt, 11, R_bytes, R_BYTES, SQLITE_STATIC);
         // v_in
@@ -388,13 +388,13 @@ void lactx_header_add(store_t *store, header_t *carrier) {
         // t1
         pack_poly_ring_custom(t1_bytes, &carrier->t1, K1 - t1_ERROR);
         sqlite3_bind_blob(stmt, 8, t1_bytes, t1_HIGHBITS, SQLITE_STATIC);
-        // z0[L]
+        // z0[LACTX_L]
         for (l = 0; l < in_carries; l++) {
-            pack_poly_z_custom(z0l_bytes + z0l_byte_len*l, carrier->z0 + l*L, in_carry_bits);
+            pack_poly_z_custom(z0l_bytes + z0l_byte_len*l, carrier->z0 + l * LACTX_L, in_carry_bits);
         }
         sqlite3_bind_blob(stmt, 9, z0l_bytes, z0l_byte_len*in_carries, SQLITE_STATIC);
-        // no z1[L]
-        // R[m - 3]
+        // no z1[LACTX_L]
+        // R[LACTX_m - 3]
         pack_poly_m_R(R_bytes, carrier->R);
         sqlite3_bind_blob(stmt, 11, R_bytes, R_BYTES, SQLITE_STATIC);
         // v_in
@@ -450,8 +450,8 @@ int lactx_db_read(store_t *store, poly_n *aggr_pk, poly_n *aggr_u) {
     coin_t coin;
     header_t carrier;
 
-    poly_n_set_zero(aggr_pk, 0, N);
-    poly_n_set_zero(aggr_u, 0, N);
+    poly_n_set_zero(aggr_pk, 0, LACTX_N);
+    poly_n_set_zero(aggr_u, 0, LACTX_N);
 
     coin.s = 0;
 
@@ -492,8 +492,8 @@ int lactx_db_read(store_t *store, poly_n *aggr_pk, poly_n *aggr_u) {
         unsigned int out_carries = get_carry_range(carrier.out_len);
         int in_carry_bits = ALPHA_BITS + ceil(log2(carrier.in_len - 1)/2);
         int out_carry_bits = ALPHA_BITS + ceil(log2(carrier.out_len - 1)/2);
-        int z0l_byte_len = (L*N*(in_carry_bits + 1))/8;
-        int z1l_byte_len = (L*N*(out_carry_bits + 1))/8;
+        int z0l_byte_len = (LACTX_L * LACTX_N * (in_carry_bits + 1)) / 8;
+        int z1l_byte_len = (LACTX_L * LACTX_N * (out_carry_bits + 1)) / 8;
 
         lactx_header_init(&carrier, carrier.out_len, carrier.in_len);
         unpack_poly_ring_custom(&carrier.pk, (uint8_t *) sqlite3_column_blob(stmt, 5), K1 - pk_ERROR);
@@ -510,11 +510,11 @@ int lactx_db_read(store_t *store, poly_n *aggr_pk, poly_n *aggr_u) {
                 unpack_poly_ring_custom(&carrier.t2_hints, (uint8_t *) sqlite3_column_blob(stmt, 15), HINTBITS);
                 if (carrier.in_len >= 2)
                     for (l = 0; l < in_carries; l++) {
-                        unpack_poly_z_custom(carrier.z0 + l * L, (uint8_t *) sqlite3_column_blob(stmt, 9) + z0l_byte_len * l, in_carry_bits);
+                        unpack_poly_z_custom(carrier.z0 + l * LACTX_L, (uint8_t *) sqlite3_column_blob(stmt, 9) + z0l_byte_len * l, in_carry_bits);
                     }
                 if (carrier.out_len >= 2)
                     for (l = 0; l < out_carries; l++) {
-                        unpack_poly_z_custom(carrier.z1 + l * L, (uint8_t *) sqlite3_column_blob(stmt, 10) + z1l_byte_len * l, out_carry_bits);
+                        unpack_poly_z_custom(carrier.z1 + l * LACTX_L, (uint8_t *) sqlite3_column_blob(stmt, 10) + z1l_byte_len * l, out_carry_bits);
                     }
                 unpack_poly_m_R(carrier.R, (uint8_t *) sqlite3_column_blob(stmt, 11));
             }

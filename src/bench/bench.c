@@ -40,10 +40,10 @@ const char *sql_open_key_table = "CREATE TABLE IF NOT EXISTS KEY_TABLE("  \
                                 "U       BLOB     NOT NULL, " \
                                 "MASK    BLOB     NOT NULL);";
 
-void save_ucoin_secrets(sqlite3 *db, ctx_t *tx, uint64_t v_out[], uint8_t out_mask[][m - D][r_BYTES]) {
+void save_ucoin_secrets(sqlite3 *db, ctx_t *tx, uint64_t v_out[], uint8_t out_mask[][LACTX_m - D][r_BYTES]) {
     sqlite3_stmt *stmt;
-    uint8_t mask_bytes[(m - D) * r_BYTES];
-    uint8_t u_bytes[n * u_BYTES];
+    uint8_t mask_bytes[(LACTX_m - D) * r_BYTES];
+    uint8_t u_bytes[LACTX_n * u_BYTES];
 
     unsigned int t, j;
     for (t = 0; t < tx->header.out_len; t++) {
@@ -54,17 +54,17 @@ void save_ucoin_secrets(sqlite3 *db, ctx_t *tx, uint64_t v_out[], uint8_t out_ma
         sqlite3_bind_blob(stmt, 2, tx->out[t].x2, SEED_BYTES, SQLITE_STATIC); // X2
 
         pack_poly_ring(u_bytes, &tx->out[t].u);
-        sqlite3_bind_blob(stmt, 3, u_bytes, n * u_BYTES, SQLITE_STATIC); // U
+        sqlite3_bind_blob(stmt, 3, u_bytes, LACTX_n * u_BYTES, SQLITE_STATIC); // U
 
-        for (j = 0; j < m - D; j++) memcpy(mask_bytes + r_BYTES*j, out_mask[t][j], r_BYTES); // MASK
-        sqlite3_bind_blob(stmt, 4, mask_bytes, (m - D) * r_BYTES, SQLITE_STATIC);
+        for (j = 0; j < LACTX_m - D; j++) memcpy(mask_bytes + r_BYTES * j, out_mask[t][j], r_BYTES); // MASK
+        sqlite3_bind_blob(stmt, 4, mask_bytes, (LACTX_m - D) * r_BYTES, SQLITE_STATIC);
 
         SQLITE3_NOFREE_CHECK(sqlite3_step(stmt) == SQLITE_DONE, sqlite3_errmsg(db), db, stmt);
         sqlite3_finalize(stmt);
     }
 }
 
-void get_ucoin_secrets(sqlite3 *db, coin_t in[], uint64_t v_in[MAX_ADDITIONS], uint8_t in_mask[MAX_ADDITIONS][m - D][r_BYTES], unsigned int count) {
+void get_ucoin_secrets(sqlite3 *db, coin_t in[], uint64_t v_in[MAX_ADDITIONS], uint8_t in_mask[MAX_ADDITIONS][LACTX_m - D][r_BYTES], unsigned int count) {
     sqlite3_stmt *stmt;
     int id;
 
@@ -82,7 +82,7 @@ void get_ucoin_secrets(sqlite3 *db, coin_t in[], uint64_t v_in[MAX_ADDITIONS], u
             unpack_poly_ring(&in[t].u, sqlite3_column_blob(stmt, 3));  // U
 
             // MASK
-            for (j = 0; j < m - D; j++) memcpy(in_mask[t][j], sqlite3_column_blob(stmt, 4) + r_BYTES*j, r_BYTES);
+            for (j = 0; j < LACTX_m - D; j++) memcpy(in_mask[t][j], sqlite3_column_blob(stmt, 4) + r_BYTES * j, r_BYTES);
         }
 
         sqlite3_finalize(stmt);
@@ -111,7 +111,7 @@ uint64_t file_size(const char *path) {
     return size;
 }
 
-#define COIN_SIZE (SEED_BYTES + (u_BYTES * n * 2) + z_BYTES + R_BYTES + 8)
+#define COIN_SIZE (SEED_BYTES + (u_BYTES * LACTX_n * 2) + z_BYTES + R_BYTES + 8)
 
 int main(int argc, char *arg[]) {
     char *sqlite3_error = 0;
@@ -123,8 +123,8 @@ int main(int argc, char *arg[]) {
     char db_path[] = "store_simulator.db";
     char key_db_path[] = "simulator_keys.db";
 
-    uint8_t in_mask[MAX_ADDITIONS][m - D][r_BYTES];
-    uint8_t out_mask[MAX_ADDITIONS][m - D][r_BYTES];
+    uint8_t in_mask[MAX_ADDITIONS][LACTX_m - D][r_BYTES];
+    uint8_t out_mask[MAX_ADDITIONS][LACTX_m - D][r_BYTES];
     uint64_t v_in[MAX_ADDITIONS];
     uint64_t v_out[MAX_ADDITIONS];
 
@@ -140,11 +140,11 @@ int main(int argc, char *arg[]) {
     unsigned int added_coins = 0;
 
     for (i = 0; i < MAX_ADDITIONS; i++)
-        for (j = 0; j < m - D; j++)
+        for (j = 0; j < LACTX_m - D; j++)
             memset(in_mask[i][j], 0, r_BYTES);
 
     for (i = 0; i < MAX_ADDITIONS; i++)
-        for (j = 0; j < m - D; j++)
+        for (j = 0; j < LACTX_m - D; j++)
             memset(out_mask[i][j], 0, r_BYTES);
 
     // Initialize the generator
